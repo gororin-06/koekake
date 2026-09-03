@@ -2,4 +2,13 @@ services:
   flask:
     build: .
     ports:
-      - "80:5000"
+      - "8080:5000"
+    volumes:
+      - koekake_data:/data
+      - ./app:/app/app
+    environment:
+      KOEKAKE_DB: /data/koekake.db
+      TZ: Asia/Tokyo
+
+volumes:
+  koekake_data:
