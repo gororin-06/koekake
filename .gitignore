@@ -21,3 +21,7 @@ desktop.ini
 # ログ・一時ファイル
 *.log
 tmp/
+
+
+#個人情報入ってる系
+readme.txt
