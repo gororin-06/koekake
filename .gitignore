@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 環境変数・秘密情報
+.env
+.env.*
+!.env.example
+
+# エディタ / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.swp
+
+# ログ・一時ファイル
+*.log
+tmp/
