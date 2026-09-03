@@ -1,5 +1,5 @@
 services:
-  web:
+  flask:
     build: .
     ports:
       - "80:5000"
