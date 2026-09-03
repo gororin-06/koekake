@@ -47,12 +47,25 @@ def index():
         LIMIT 20
     """).fetchall()
 
-    row = db.execute(
-        "SELECT name FROM shelters WHERE is_active = 1"
-    ).fetchone()
+    # 表示中の親に対する返信をまとめて取る
+    replies = {}
+    if posts:
+        ids = [p['id'] for p in posts]
+        ph = ','.join('?' * len(ids))
+        rows = db.execute(f"""
+            SELECT * FROM posts
+            WHERE is_deleted = 0 AND parent_id IN ({ph})
+            ORDER BY id ASC
+        """, ids).fetchall()
+        for r in rows:
+            replies.setdefault(r['parent_id'], []).append(r)
+
+    row = db.execute("SELECT name FROM shelters WHERE is_active = 1").fetchone()
     shelter_name = row['name'] if row else '避難所（未設定）'
 
-    return render_template('index.html', posts=posts, shelter_name=shelter_name)
+    return render_template('index.html',
+                           posts=posts, replies=replies, shelter_name=shelter_name)
+
 @app.route('/api/posts', methods=['POST'])
 def create_post():
     data = request.get_json()
@@ -80,6 +93,40 @@ def create_post():
 
     return jsonify({'id': cur.lastrowid}), 201
 
+@app.route('/api/posts/<int:post_id>/resolve', methods=['POST'])
+def resolve_post(post_id):
+    data = request.get_json() or {}
+    token = data.get('token')
+
+    if not token:
+        return jsonify({'error': 'invalid'}), 400
+
+    db = get_db()
+    row = db.execute(
+        'SELECT author_token, is_resolved FROM posts WHERE id = ? AND is_deleted = 0',
+        (post_id,)
+    ).fetchone()
+
+    if row is None:
+        return jsonify({'error': 'not found'}), 404
+
+    # 自分の投稿だけ操作できる
+    if row['author_token'] != token:
+        return jsonify({'error': 'forbidden'}), 403
+
+    if row['is_resolved']:
+        db.execute(
+            'UPDATE posts SET is_resolved = 0, resolved_at = NULL WHERE id = ?',
+            (post_id,)
+        )
+    else:
+        db.execute(
+            "UPDATE posts SET is_resolved = 1, resolved_at = datetime('now','localtime') WHERE id = ?",
+            (post_id,)
+        )
+    db.commit()
+
+    return jsonify({'ok': True})
 
 @app.route('/ping')
 def ping():
