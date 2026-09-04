@@ -111,8 +111,33 @@ def index():
 
     status = get_shelter_status(db)
 
+    # ポーリングの起点。この時点で存在する最大IDより後を「新着」とみなす
+    mrow = db.execute("SELECT MAX(id) AS m FROM posts").fetchone()
+    since_id = mrow['m'] or 0
+
     return render_template('index.html',
-                           posts=posts, replies=replies, status=status)
+                           posts=posts, replies=replies, status=status,
+                           since_id=since_id)
+
+
+@app.route('/api/posts')
+def poll_posts():
+    """新着の差分検知。since より後の未削除投稿の件数だけ返す。
+
+    描画はしない（クライアントはリロードで取り直す）。返信も1件として数える。
+    """
+    try:
+        since = int(request.args.get('since', 0))
+    except (TypeError, ValueError):
+        since = 0
+
+    db = get_db()
+    row = db.execute(
+        "SELECT COUNT(*) AS c FROM posts WHERE id > ? AND is_deleted = 0",
+        (since,)
+    ).fetchone()
+
+    return jsonify({'count': row['c']})
 
 @app.route('/api/posts', methods=['POST'])
 def create_post():

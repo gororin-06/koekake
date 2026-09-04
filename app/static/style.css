@@ -513,6 +513,35 @@ header {
     background: #c7c7cc;
 }
 
+/* ===== 新着バー ===== */
+.newbar {
+    position: fixed;
+    top: 12px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 9;
+    pointer-events: none;
+}
+
+.newbar button {
+    pointer-events: auto;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 999px;
+    background: #007AFF;
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .22);
+    cursor: pointer;
+}
+
+.newbar button:active {
+    background: #0062cc;
+}
+
 /* ===== トースト ===== */
 .toast {
     position: fixed;

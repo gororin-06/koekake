@@ -37,6 +37,29 @@
         }
     }
 
+    // 自分が投稿したIDを覚えておく。本人判定に使う（トークンはHTMLに出さない）
+    function loadMyPosts() {
+        try {
+            var raw = localStorage.getItem('koekake_posts');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return window._tmpPosts || [];
+        }
+    }
+    function addMyPost(id) {
+        if (!id) return;
+        var arr = loadMyPosts();
+        if (arr.indexOf(id) === -1) arr.push(id);
+        try {
+            localStorage.setItem('koekake_posts', JSON.stringify(arr));
+        } catch (e) {
+            window._tmpPosts = arr;
+        }
+    }
+    function isMine(id) {
+        return loadMyPosts().indexOf(parseInt(id, 10)) !== -1;
+    }
+
     function saveLoc(v) {
         try { localStorage.setItem('koekake_loc', v); } catch (e) { }
     }
@@ -133,6 +156,9 @@
             })
         }).then(function (res) {
             if (!res.ok) throw new Error('failed');
+            return res.json();
+        }).then(function (data) {
+            addMyPost(data.id);
             location.reload();
         }).catch(function () {
             btnSend.disabled = false;
@@ -147,7 +173,7 @@
         var btn = acts[n];
 
         // 自分の投稿でなければ押せない
-        if (btn.getAttribute('data-owner') !== getToken()) {
+        if (!isMine(btn.getAttribute('data-id'))) {
             btn.disabled = true;
             continue;
         }
@@ -179,6 +205,32 @@
         });
     }
 
+    // 新着ポーリング（差分検知のみ。描画はリロードに任せる）
+    var newbar = document.getElementById('newbar');
+    var newbarBtn = document.getElementById('newbarBtn');
+    var newCount = document.getElementById('newCount');
+    var sinceId = parseInt(document.body.getAttribute('data-since'), 10) || 0;
+
+    if (newbar && newbarBtn) {
+        newbarBtn.addEventListener('click', function () {
+            location.reload();
+        });
+
+        setInterval(function () {
+            fetch('/api/posts?since=' + sinceId).then(function (res) {
+                if (!res.ok) throw new Error('failed');
+                return res.json();
+            }).then(function (data) {
+                if (data.count > 0) {
+                    newCount.textContent = data.count;
+                    newbar.hidden = false;
+                }
+            }).catch(function () {
+                // オフライン等は黙って次の周期を待つ（エラー表示はしない）
+            });
+        }, 3000);
+    }
+
     // 返信の送信
     var sbtns = document.querySelectorAll('.send-reply');
     for (var b2 = 0; b2 < sbtns.length; b2++) {
@@ -208,6 +260,9 @@
                 })
             }).then(function (res) {
                 if (!res.ok) throw new Error('failed');
+                return res.json();
+            }).then(function (data) {
+                addMyPost(data.id);
                 location.reload();
             }).catch(function () {
                 self.disabled = false;

@@ -10,7 +10,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body data-since="{{ since_id }}">
+
+    <div class="newbar" id="newbar" hidden>
+        <button type="button" id="newbarBtn">
+            ↑ 新着 <span id="newCount">0</span>件　タップで表示
+        </button>
+    </div>
+
     <div class="wrap">
 
         <header>
@@ -73,7 +80,7 @@
                 <button type="button" class="act reply" data-id="{{ p['id'] }}">
                     返信する{% if replies.get(p['id']) %} {{ replies[p['id']]|length }}{% endif %}
                 </button>
-                <button type="button" class="act resolve" data-id="{{ p['id'] }}" data-owner="{{ p['author_token'] }}">
+                <button type="button" class="act resolve" data-id="{{ p['id'] }}">
                     {% if p['is_resolved'] %}もどす{% else %}✓ 解決した{% endif %}
                 </button>
             </div>
