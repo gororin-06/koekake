@@ -7,6 +7,55 @@ app = Flask(__name__)
 DB_PATH = os.environ.get('KOEKAKE_DB', '/data/koekake.db')
 CATEGORIES = ('sos', 'health', 'child', 'info')
 
+# settings.disaster_type のキー → (sheltersの列, 日本語ラベル)
+DISASTER_TYPES = {
+    'flood':      ('disaster_flood', '洪水'),
+    'landslide':  ('disaster_landslide_etc', '崖崩れ・土石流・地滑り'),
+    'stormsurge': ('disaster_stormsurge', '高潮'),
+    'earthquake': ('disaster_earthquake', '地震'),
+    'tsunami':    ('disaster_tsunami', '津波'),
+    'fire':       ('disaster_large_scale_fire', '大規模な火事'),
+    'inland':     ('disaster_inland_flooding', '内水氾濫'),
+    'volcano':    ('disaster_volcanicactivity', '火山現象'),
+}
+
+
+def get_shelter_status(db):
+    """アクティブ避難所と設定中の災害種別を突き合わせて返す。
+
+    - shelter_name    : 常に文字列（避難所未設定でもフォールバック）
+    - disaster_label  : 判定できないときは None（テンプレは何も出さない）
+    - is_compatible   : True=対応 / False=非対応 / None=判定不能
+    """
+    shelter = db.execute(
+        "SELECT * FROM shelters WHERE is_active = 1"
+    ).fetchone()
+    shelter_name = shelter['name'] if shelter else '避難所（未設定）'
+
+    row = db.execute(
+        "SELECT value FROM settings WHERE key = 'disaster_type'"
+    ).fetchone()
+    key = row['value'] if row else None
+
+    # 管理者が --hide にしていればバナーを出さない（既定は表示）
+    brow = db.execute(
+        "SELECT value FROM settings WHERE key = 'disaster_banner'"
+    ).fetchone()
+    banner_on = not (brow and brow['value'] == 'off')
+
+    label = None
+    is_compatible = None
+    # 災害種別が未設定・不明、避難所が未設定、またはバナー非表示なら判定を出さない
+    if banner_on and shelter is not None and key in DISASTER_TYPES:
+        col, label = DISASTER_TYPES[key]
+        is_compatible = bool(shelter[col])
+
+    return {
+        'shelter_name': shelter_name,
+        'disaster_label': label,
+        'is_compatible': is_compatible,
+    }
+
 
 def get_db():
     if 'db' not in g:
@@ -60,11 +109,10 @@ def index():
         for r in rows:
             replies.setdefault(r['parent_id'], []).append(r)
 
-    row = db.execute("SELECT name FROM shelters WHERE is_active = 1").fetchone()
-    shelter_name = row['name'] if row else '避難所（未設定）'
+    status = get_shelter_status(db)
 
     return render_template('index.html',
-                           posts=posts, replies=replies, shelter_name=shelter_name)
+                           posts=posts, replies=replies, status=status)
 
 @app.route('/api/posts', methods=['POST'])
 def create_post():
