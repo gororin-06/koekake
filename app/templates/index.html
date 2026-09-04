@@ -26,6 +26,10 @@
             <div class="netstat">避難所Wi-Fi 接続中（インターネット不要）</div>
         </header>
 
+        {% if admin %}
+        <div class="adminmode">管理者モード：ピン留め・削除ができます</div>
+        {% endif %}
+
         {% if status.disaster_label %}
         {% if status.is_compatible %}
         <div class="disaster-ok">
@@ -44,16 +48,16 @@
         {% endif %}
 
         <div class="tabs">
-            <button class="tab on">すべて</button>
-            <button class="tab">物資</button>
-            <button class="tab">体調</button>
-            <button class="tab">子育て</button>
-            <button class="tab">おしらせ</button>
+            <button type="button" class="tab on" data-filter="all">すべて</button>
+            <button type="button" class="tab" data-filter="sos">物資</button>
+            <button type="button" class="tab" data-filter="health">体調</button>
+            <button type="button" class="tab" data-filter="child">子育て</button>
+            <button type="button" class="tab" data-filter="info">おしらせ</button>
         </div>
 
         {% if posts %}
         {% for p in posts %}
-        <div class="post {% if p['is_admin'] %}admin{% endif %} {% if p['is_resolved'] %}done{% endif %}">
+        <div class="post {% if p['is_admin'] %}admin{% endif %} {% if p['is_resolved'] %}done{% endif %}" data-cat="{{ p['category'] }}">
             <div class="meta">
                 {% if p['is_resolved'] %}
                 <span class="badge done">解決済み</span>
@@ -73,6 +77,15 @@
                 </span>
             </div>
             <div class="body">{{ p['body'] }}</div>
+
+            {% if admin %}
+            <div class="admin-actions">
+                <button type="button" class="adm-btn pin" data-id="{{ p['id'] }}">
+                    {% if p['is_pinned'] %}★ ピン解除{% else %}☆ ピン留め{% endif %}
+                </button>
+                <button type="button" class="adm-btn del" data-id="{{ p['id'] }}">削除</button>
+            </div>
+            {% endif %}
 
             {% if not p['is_admin'] %}
             {% if not p['is_admin'] %}
@@ -103,6 +116,10 @@
             {% endif %}
         </div>
         {% endfor %}
+        <div class="empty" id="filterEmpty" hidden>
+            <strong>この種類の投稿はまだありません</strong>
+            「すべて」やほかのタブも見てみてください
+        </div>
         {% else %}
         <div class="empty">
             <strong>まだ投稿がありません</strong>
@@ -152,6 +169,13 @@
                 <label for="loc">いまいる場所（区画番号）</label>
                 <input type="text" id="loc" placeholder="例: B-12">
             </div>
+
+            {% if admin %}
+            <label class="admin-toggle">
+                <input type="checkbox" id="asAdmin">
+                <span>本部からのおしらせとして投稿する<small>強調表示され、先頭に固定されます</small></span>
+            </label>
+            {% endif %}
 
             <button type="button" class="submit" id="btnSend">送信する</button>
         </div>

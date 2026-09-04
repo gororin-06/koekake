@@ -7,6 +7,9 @@ app = Flask(__name__)
 DB_PATH = os.environ.get('KOEKAKE_DB', '/data/koekake.db')
 CATEGORIES = ('sos', 'health', 'child', 'info')
 
+# 管理者キー。?key=... で照合する簡易認証。LAN内デモ用（本番運用向けではない）
+ADMIN_KEY = os.environ.get('KOEKAKE_ADMIN_KEY', 'honbu')
+
 # settings.disaster_type のキー → (sheltersの列, 日本語ラベル)
 DISASTER_TYPES = {
     'flood':      ('disaster_flood', '洪水'),
@@ -85,9 +88,15 @@ def init_db():
 init_db()
 
 
+def key_ok(key):
+    """管理者キーの照合。空・不一致は False"""
+    return bool(key) and key == ADMIN_KEY
+
+
 @app.route('/')
 def index():
     db = get_db()
+    admin = key_ok(request.args.get('key'))
 
     posts = db.execute("""
         SELECT * FROM posts
@@ -117,7 +126,7 @@ def index():
 
     return render_template('index.html',
                            posts=posts, replies=replies, status=status,
-                           since_id=since_id)
+                           since_id=since_id, admin=admin)
 
 
 @app.route('/api/posts')
@@ -150,10 +159,14 @@ def create_post():
     if not body or category not in CATEGORIES or not token:
         return jsonify({'error': 'invalid'}), 400
 
+    # 本部からのおしらせは管理者キーが正しいときだけ。本部投稿は先頭に固定する
+    is_admin = 1 if (data.get('is_admin') and key_ok(data.get('key'))) else 0
+
     db = get_db()
     cur = db.execute("""
-        INSERT INTO posts (parent_id, category, body, author_name, location, author_token)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO posts (parent_id, category, body, author_name, location,
+                           author_token, is_admin, is_pinned)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get('parent_id'),
         category,
@@ -161,6 +174,8 @@ def create_post():
         (data.get('author_name') or '').strip() or None,
         (data.get('location') or '').strip() or None,
         token,
+        is_admin,
+        is_admin,
     ))
     db.commit()
 
@@ -200,6 +215,44 @@ def resolve_post(post_id):
     db.commit()
 
     return jsonify({'ok': True})
+
+@app.route('/api/posts/<int:post_id>/pin', methods=['POST'])
+def pin_post(post_id):
+    data = request.get_json(silent=True) or {}
+    if not key_ok(data.get('key')):
+        return jsonify({'error': 'forbidden'}), 403
+
+    db = get_db()
+    row = db.execute(
+        'SELECT is_pinned FROM posts WHERE id = ? AND is_deleted = 0', (post_id,)
+    ).fetchone()
+    if row is None:
+        return jsonify({'error': 'not found'}), 404
+
+    newval = 0 if row['is_pinned'] else 1
+    db.execute('UPDATE posts SET is_pinned = ? WHERE id = ?', (newval, post_id))
+    db.commit()
+
+    return jsonify({'ok': True, 'is_pinned': newval})
+
+
+@app.route('/api/posts/<int:post_id>/delete', methods=['POST'])
+def delete_post(post_id):
+    data = request.get_json(silent=True) or {}
+    if not key_ok(data.get('key')):
+        return jsonify({'error': 'forbidden'}), 403
+
+    # 論理削除のみ（物理削除はしない。誤削除の復旧・デマ対応の記録のため）
+    db = get_db()
+    cur = db.execute(
+        'UPDATE posts SET is_deleted = 1 WHERE id = ? AND is_deleted = 0', (post_id,)
+    )
+    db.commit()
+    if cur.rowcount == 0:
+        return jsonify({'error': 'not found'}), 404
+
+    return jsonify({'ok': True})
+
 
 @app.route('/ping')
 def ping():

@@ -44,6 +44,89 @@ header {
     margin-top: 4px;
 }
 
+/* ===== 管理者モード ===== */
+.adminmode {
+    padding: 8px 16px;
+    background: #00695C;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: .02em;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #D9DBE0;
+}
+
+.adm-btn {
+    flex: 1;
+    min-height: 44px;
+    border: 1px solid #E5E5EA;
+    border-radius: 10px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.adm-btn.pin {
+    color: #00695C;
+}
+
+.adm-btn.del {
+    color: #D32F2F;
+    border-color: #F0C7C4;
+}
+
+.adm-btn:active {
+    background: #F2F2F7;
+}
+
+.adm-btn:disabled {
+    color: #c7c7cc;
+}
+
+.admin-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: #E4F0EE;
+    border: 1px solid #B7D8D2;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.admin-toggle input {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    flex: none;
+    accent-color: #00695C;
+}
+
+.admin-toggle span {
+    font-size: 16px;
+    font-weight: 700;
+    color: #00504a;
+    line-height: 1.4;
+}
+
+.admin-toggle small {
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+    color: #3f6b66;
+    margin-top: 2px;
+}
+
 /* ===== 災害種別の適合バナー ===== */
 .disaster-ok,
 .disaster-warn {

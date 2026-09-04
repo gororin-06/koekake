@@ -145,15 +145,24 @@
         var loc = locInput.value.trim();
         if (loc) saveLoc(loc);
 
+        var payload = {
+            category: category,
+            body: body,
+            location: loc,
+            token: getToken()
+        };
+
+        // 管理者モードで「本部として投稿」にチェックがあれば、キーごと送る
+        var asAdmin = document.getElementById('asAdmin');
+        if (asAdmin && asAdmin.checked) {
+            payload.is_admin = 1;
+            payload.key = urlKey();
+        }
+
         fetch('/api/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                category: category,
-                body: body,
-                location: loc,
-                token: getToken()
-            })
+            body: JSON.stringify(payload)
         }).then(function (res) {
             if (!res.ok) throw new Error('failed');
             return res.json();
@@ -205,30 +214,111 @@
         });
     }
 
-    // 新着ポーリング（差分検知のみ。描画はリロードに任せる）
+    // 新着チェック（差分検知のみ・描画はリロードに任せる）
+    // タイマーは持たず、画面に戻ってきた時だけ確認する＝端末の電力を極力使わない
     var newbar = document.getElementById('newbar');
     var newbarBtn = document.getElementById('newbarBtn');
     var newCount = document.getElementById('newCount');
     var sinceId = parseInt(document.body.getAttribute('data-since'), 10) || 0;
 
     if (newbar && newbarBtn) {
-        newbarBtn.addEventListener('click', function () {
-            location.reload();
-        });
+        var checking = false;
 
-        setInterval(function () {
+        function checkNew() {
+            if (checking) return;
+            checking = true;
             fetch('/api/posts?since=' + sinceId).then(function (res) {
                 if (!res.ok) throw new Error('failed');
                 return res.json();
             }).then(function (data) {
+                checking = false;
                 if (data.count > 0) {
                     newCount.textContent = data.count;
                     newbar.hidden = false;
                 }
             }).catch(function () {
-                // オフライン等は黙って次の周期を待つ（エラー表示はしない）
+                checking = false;
+                // オフライン等は黙って次の機会を待つ（エラー表示はしない）
             });
-        }, 3000);
+        }
+
+        newbarBtn.addEventListener('click', function () {
+            location.reload();
+        });
+
+        // アプリに戻ってきた／画面が点いた瞬間に一度だけ確認
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') checkNew();
+        });
+
+        // 開いた直後に一度（描画とJS初期化の隙間に届いた分を拾う）
+        checkNew();
+    }
+
+    // 管理者操作（?key=... で開いたときだけボタンがDOMに存在する）
+    // キーは管理者のURLにあるので、そこから読む（通常ユーザーのDOMには出さない）
+    function urlKey() {
+        try {
+            var m = location.search.match(/[?&]key=([^&]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function adminAction(btn, path, confirmMsg) {
+        if (confirmMsg && !window.confirm(confirmMsg)) return;
+        var id = btn.getAttribute('data-id');
+        btn.disabled = true;
+        fetch('/api/posts/' + id + path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: urlKey() })
+        }).then(function (res) {
+            if (!res.ok) throw new Error('failed');
+            location.reload();
+        }).catch(function () {
+            btn.disabled = false;
+            showToast('うまくいきませんでした');
+        });
+    }
+
+    var pinBtns = document.querySelectorAll('.adm-btn.pin');
+    for (var pi = 0; pi < pinBtns.length; pi++) {
+        pinBtns[pi].addEventListener('click', function () {
+            adminAction(this, '/pin', null);
+        });
+    }
+
+    var delBtns = document.querySelectorAll('.adm-btn.del');
+    for (var di = 0; di < delBtns.length; di++) {
+        delBtns[di].addEventListener('click', function () {
+            adminAction(this, '/delete', 'この投稿を削除します。よろしいですか？');
+        });
+    }
+
+    // カテゴリタブのフィルタ（表示中の投稿を種類でしぼる。サーバー往復なし）
+    var tabs = document.querySelectorAll('.tab');
+    var timelinePosts = document.querySelectorAll('.post');
+    var filterEmpty = document.getElementById('filterEmpty');
+
+    function applyFilter(f) {
+        var shown = 0;
+        for (var i = 0; i < timelinePosts.length; i++) {
+            var match = (f === 'all') || (timelinePosts[i].getAttribute('data-cat') === f);
+            timelinePosts[i].hidden = !match;
+            if (match) shown++;
+        }
+        // 「すべて」以外で1件も無いときだけ空表示を出す
+        if (filterEmpty) filterEmpty.hidden = (f === 'all' || shown > 0);
+    }
+
+    for (var tb = 0; tb < tabs.length; tb++) {
+        tabs[tb].addEventListener('click', function () {
+            for (var m = 0; m < tabs.length; m++) tabs[m].classList.remove('on');
+            this.classList.add('on');
+            applyFilter(this.getAttribute('data-filter'));
+        });
     }
 
     // 返信の送信
