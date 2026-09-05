@@ -257,6 +257,12 @@ header {
     color: #3c3c43;
 }
 
+/* 今日以外の投稿につく日付。時刻だけの中で目立たせる */
+.daymark {
+    font-weight: 700;
+    color: #b3261e;
+}
+
 .body {
     margin-top: 10px;
 }

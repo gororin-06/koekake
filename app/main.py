@@ -124,9 +124,12 @@ def index():
     mrow = db.execute("SELECT MAX(id) AS m FROM posts").fetchone()
     since_id = mrow['m'] or 0
 
+    # 「今日」の判定に使う。post_at と同じ localtime で出して日付ズレを防ぐ
+    today = db.execute("SELECT date('now','localtime') AS d").fetchone()['d']
+
     return render_template('index.html',
                            posts=posts, replies=replies, status=status,
-                           since_id=since_id, admin=admin)
+                           since_id=since_id, admin=admin, today=today)
 
 
 @app.route('/api/posts')

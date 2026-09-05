@@ -1,3 +1,6 @@
+{% macro when(ts, today) -%}
+{%- if ts[0:10] == today -%}{{ ts[11:16] }}{%- else -%}<span class="daymark">{{ ts[5:7] }}/{{ ts[8:10] }}</span> {{ ts[11:16] }}{%- endif -%}
+{%- endmacro -%}
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -73,7 +76,7 @@
                 {% endif %}
                 <span>
                     {% if p['location'] %}<span class="place">{{ p['location'] }}</span> ・{% endif %}
-                    {{ p['post_at'][11:16] }}
+                    {{ when(p['post_at'], today) }}
                 </span>
             </div>
             <div class="body">{{ p['body'] }}</div>
@@ -103,7 +106,7 @@
             <div class="reply-item">
                 <div class="meta">
                     <span>{{ r['location'] or '' }}</span>
-                    <span>{{ r['post_at'][11:16] }}</span>
+                    <span>{{ when(r['post_at'], today) }}</span>
                 </div>
                 <div>{{ r['body'] }}</div>
             </div>
