@@ -44,6 +44,106 @@ header {
     margin-top: 4px;
 }
 
+/* ===== 初期設定 完了メッセージ ===== */
+.setup-done {
+    margin: 16px;
+    padding: 24px 20px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+    text-align: center;
+}
+
+.setup-done h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #00695C;
+    margin: 0 0 10px;
+}
+
+.setup-done p {
+    font-size: 15px;
+    color: #6e6e73;
+    margin: 8px 0;
+    line-height: 1.7;
+}
+
+.setup-done a {
+    color: #007AFF;
+    font-weight: 700;
+}
+
+.setup-done button {
+    margin-top: 18px;
+    min-height: 56px;
+    padding: 0 28px;
+    border: none;
+    border-radius: 12px;
+    background: #007AFF;
+    color: #fff;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.setup-done button:active {
+    background: #0062cc;
+}
+
+/* ===== DEBUG パネル（管理者モードのみ） ===== */
+.debug {
+    margin: 0 16px 8px;
+}
+
+.debug-toggle {
+    border: 1px dashed #8a8f98;
+    background: #2b2f36;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.debug-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 12px;
+    background: #23262c;
+    border-radius: 10px;
+}
+
+.debug-btn {
+    min-height: 46px;
+    border: none;
+    border-radius: 8px;
+    background: #3a3f47;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.debug-btn:active {
+    opacity: .85;
+}
+
+.debug-btn.warn {
+    background: #7a2420;
+    color: #ffdad6;
+}
+
+.debug-btn:disabled {
+    opacity: .5;
+}
+
 /* ===== 管理者モード ===== */
 .adminmode {
     padding: 8px 16px;

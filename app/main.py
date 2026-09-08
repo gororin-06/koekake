@@ -85,6 +85,26 @@ def init_db():
         with open('schema.sql', encoding='utf-8') as f:
             conn.executescript(f.read())
 
+def _cap_to_int(v):
+    """想定収容人数の表記ゆれを整数に。'8,889人（敷地面積…）'→8889、空/不明→0"""
+    if not v:
+        return 0
+    digits = ''
+    for ch in str(v):
+        if ch.isdigit():
+            digits += ch
+        elif ch == ',':
+            continue
+        else:
+            break  # 先頭の数値だけ採用
+    return int(digits) if digits else 0
+
+
+def _to_flag(v):
+    """災害種別列の表記ゆれを 1/0 に。'1'/'○'/'〇' 等→1、'※1'・空など→0"""
+    return 1 if str(v).strip() in ('1', '○', '〇', '◯', 'TRUE', 'True') else 0
+
+
 def import_shelters():
     csv_path = os.environ.get(
         'KOEKAKE_SHELTER_CSV',
@@ -137,16 +157,16 @@ def import_shelters():
                 row['住所'],
                 row['都道府県名'],
                 row['市区町村名'],
-                int(row['災害種別_洪水'] or 0),
-                int(row['災害種別_崖崩れ、土石流及び地滑り'] or 0),
-                int(row['災害種別_高潮'] or 0),
-                int(row['災害種別_地震'] or 0),
-                int(row['災害種別_津波'] or 0),
-                int(row['災害種別_大規模な火事'] or 0),
-                int(row['災害種別_内水氾濫'] or 0),
-                int(row['災害種別_火山現象'] or 0),
-                int(row['指定避難所との重複'] or 0),
-                int(row['想定収容人数'] or 0),
+                _to_flag(row['災害種別_洪水']),
+                _to_flag(row['災害種別_崖崩れ、土石流及び地滑り']),
+                _to_flag(row['災害種別_高潮']),
+                _to_flag(row['災害種別_地震']),
+                _to_flag(row['災害種別_津波']),
+                _to_flag(row['災害種別_大規模な火事']),
+                _to_flag(row['災害種別_内水氾濫']),
+                _to_flag(row['災害種別_火山現象']),
+                0,  # is_active は管理者が選択する運用状態。CSVの重複フラグは使わない
+                _cap_to_int(row['想定収容人数']),
             ))
 
             imported += 1
@@ -194,9 +214,15 @@ def index():
     # 「今日」の判定に使う。post_at と同じ localtime で出して日付ズレを防ぐ
     today = db.execute("SELECT date('now','localtime') AS d").fetchone()['d']
 
+    # 担当避難所が未設定なら初回セットアップ（避難所選択）画面を出す
+    needs_setup = db.execute(
+        "SELECT 1 FROM shelters WHERE is_active = 1 LIMIT 1"
+    ).fetchone() is None
+
     return render_template('index.html',
                            posts=posts, replies=replies, status=status,
-                           since_id=since_id, admin=admin, today=today)
+                           since_id=since_id, admin=admin, today=today,
+                           needs_setup=needs_setup)
 
 
 init_db()
@@ -225,6 +251,11 @@ def sheltercount():
 @app.route('/api/shelters/<int:shelter_id>/select', methods=['POST'])
 def select_shelter(shelter_id):
     db = get_db()
+
+    # このselect前に担当避難所が無ければ「初回セットアップ」＝この端末を管理者にする
+    was_setup = db.execute(
+        "SELECT 1 FROM shelters WHERE is_active = 1 LIMIT 1"
+    ).fetchone() is None
 
     row = db.execute(
         "SELECT id, name FROM shelters WHERE id = ?",
@@ -255,11 +286,11 @@ def select_shelter(shelter_id):
 
     db.commit()
 
-    return jsonify({
-        'ok': True,
-        'id': row['id'],
-        'name': row['name']
-    })
+    resp = {'ok': True, 'id': row['id'], 'name': row['name']}
+    if was_setup:
+        # 初回セットアップした端末に管理者モードURLを渡す（新しいタブで開く用）
+        resp['admin_url'] = '/?key=' + ADMIN_KEY
+    return jsonify(resp)
 
 
 # =========================
@@ -489,6 +520,48 @@ def delete_post(post_id):
     db.commit()
     if cur.rowcount == 0:
         return jsonify({'error': 'not found'}), 404
+
+    return jsonify({'ok': True})
+
+
+@app.route('/api/debug', methods=['POST'])
+def debug_action():
+    """管理者モードのDEBUG操作。key照合必須。開発・デモ用。"""
+    data = request.get_json(silent=True) or {}
+    if not key_ok(data.get('key')):
+        return jsonify({'error': 'forbidden'}), 403
+
+    action = data.get('action')
+    db = get_db()
+
+    if action == 'change_shelter':
+        # 担当避難所を解除 → 次の表示で避難所選択画面に戻る
+        db.execute("UPDATE shelters SET is_active = 0")
+        db.commit()
+
+    elif action == 'reset':
+        # 避難所と設定をリセット（投稿は残す）→ 初回セットアップ状態へ
+        db.execute("UPDATE shelters SET is_active = 0")
+        db.execute(
+            "DELETE FROM settings WHERE key IN "
+            "('disaster_type', 'disaster_banner', 'active_shelter_id')"
+        )
+        db.commit()
+
+    elif action == 'clear_posts':
+        # 投稿を全削除（デバッグ用の物理削除）。自己参照FK対策で返信→親の順に消す
+        db.execute("DELETE FROM posts WHERE parent_id IS NOT NULL")
+        db.execute("DELETE FROM posts")
+        db.execute("DELETE FROM sqlite_sequence WHERE name = 'posts'")
+        db.commit()
+
+    elif action == 'seed':
+        # デモ用テストデータを投入（seed.py を再利用。既存投稿は置き換わる）
+        import seed
+        seed.main()
+
+    else:
+        return jsonify({'error': 'invalid action'}), 400
 
     return jsonify({'ok': True})
 

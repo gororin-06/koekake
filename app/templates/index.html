@@ -9,12 +9,53 @@ ts[11:16] }}{%- endif -%}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
-        {{ status.shelter_name }} - こえかけ
+        {% if needs_setup %}避難所を選ぶ{% else %}{{ status.shelter_name }}{% endif %} - こえかけ
     </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body data-since="{{ since_id }}">
+
+    {% if needs_setup %}
+    <!-- 初回セットアップ：担当避難所が未設定のときだけ表示（既存の検索APIを利用） -->
+    <div class="wrap setup">
+        <header>
+            <div class="shelter">避難所を選んでください</div>
+            <div class="appname">こえかけ - この端末を担当避難所として設定します</div>
+            <div class="netstat">避難所Wi-Fi 接続中（インターネット不要）</div>
+        </header>
+
+        <section class="shelter-search">
+            <h2>避難所を探す</h2>
+            <p class="shelter-search-lead">検索する項目をえらんでください</p>
+
+            <div class="shelter-search-tabs">
+                <button type="button" class="shelter-filter on" data-field="all">すべて</button>
+                <button type="button" class="shelter-filter" data-field="name">避難所名</button>
+                <button type="button" class="shelter-filter" data-field="address">住所</button>
+                <button type="button" class="shelter-filter" data-field="city">市区町村</button>
+            </div>
+
+            <div class="shelter-search-box">
+                <input type="search" id="shelterSearchInput" placeholder="避難所名・住所・市区町村" autocomplete="off">
+                <button type="button" id="shelterSearchBtn">検索</button>
+            </div>
+
+            <div id="shelterSearchStatus" class="shelter-search-status">検索すると避難所が表示されます</div>
+            <div id="shelterResults" class="shelter-results"></div>
+        </section>
+
+        <div class="setup-done" id="setupDone" hidden>
+            <h2>管理者モードを新しいタブで開きました</h2>
+            <p>この画面（タブ）は避難者向けです。ピン留め・削除などの管理は、新しく開いたタブで行ってください。</p>
+            <p id="setupDoneFallback" hidden>
+                新しいタブが開かなかった場合：<a id="setupDoneLink" href="#" target="_blank" rel="noopener">管理者モードを開く</a>
+            </p>
+            <button type="button" id="setupDoneBoard">この端末で掲示板をひらく</button>
+        </div>
+    </div>
+
+    {% else %}
 
     <div class="newbar" id="newbar" hidden>
         <button type="button" id="newbarBtn">
@@ -29,43 +70,18 @@ ts[11:16] }}{%- endif -%}
             <div class="appname">こえかけ - 避難者どうしの掲示板</div>
             <div class="netstat">避難所Wi-Fi 接続中（インターネット不要）</div>
         </header>
-        <!-- <section class="shelter-search">
-            <h2>避難所を探す</h2>
-            <p class="shelter-search-lead">
-                検索する項目をえらんでください
-            </p>
-
-            <div class="shelter-search-tabs">
-                <button type="button" class="shelter-filter on" data-field="all">
-                    すべて
-                </button>
-                <button type="button" class="shelter-filter" data-field="name">
-                    避難所名
-                </button>
-                <button type="button" class="shelter-filter" data-field="address">
-                    住所
-                </button>
-                <button type="button" class="shelter-filter" data-field="city">
-                    市区町村
-                </button>
-            </div>
-
-            <div class="shelter-search-box">
-                <input type="search" id="shelterSearchInput" placeholder="避難所名・住所・市区町村" autocomplete="off">
-                <button type="button" id="shelterSearchBtn">
-                    検索
-                </button>
-            </div>
-
-            <div id="shelterSearchStatus" class="shelter-search-status">
-                検索すると避難所が表示されます
-            </div>
-
-            <div id="shelterResults" class="shelter-results"></div>
-        </section> -->
 
         {% if admin %}
         <div class="adminmode">管理者モード：ピン留め・削除ができます</div>
+        <div class="debug">
+            <button type="button" id="debugToggle" class="debug-toggle">DEBUG</button>
+            <div class="debug-panel" id="debugPanel" hidden>
+                <button type="button" class="debug-btn" data-debug="change_shelter">避難所を変更</button>
+                <button type="button" class="debug-btn" data-debug="seed">テストデータを挿入</button>
+                <button type="button" class="debug-btn warn" data-debug="clear_posts">投稿を全削除</button>
+                <button type="button" class="debug-btn warn" data-debug="reset">初期化（避難所・設定）</button>
+            </div>
+        </div>
         {% endif %}
 
         {% if status.disaster_label %}
@@ -219,6 +235,8 @@ ts[11:16] }}{%- endif -%}
             <button type="button" class="submit" id="btnSend">送信する</button>
         </div>
     </div>
+
+    {% endif %}
 
     <div class="toast" id="toast" hidden></div>
 

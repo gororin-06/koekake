@@ -88,9 +88,12 @@
         sheet.classList.remove('open');
     }
 
-    document.getElementById('btnOpen').addEventListener('click', openSheet);
+    // セットアップ画面では投稿系の要素が無いので、存在するときだけ配線する
+    var btnOpen = document.getElementById('btnOpen');
+    if (btnOpen) btnOpen.addEventListener('click', openSheet);
 
-    document.getElementById('btnBack').addEventListener('click', function () {
+    var btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', function () {
         if (step2.hidden) {
             closeSheet();
         } else {
@@ -131,7 +134,7 @@
     }
 
     // 送信
-    btnSend.addEventListener('click', function () {
+    if (btnSend) btnSend.addEventListener('click', function () {
         var body = freeBody.value.trim() || selected;
         if (!body) {
             showToast('つたえる内容をえらんでください');
@@ -294,6 +297,41 @@
     for (var di = 0; di < delBtns.length; di++) {
         delBtns[di].addEventListener('click', function () {
             adminAction(this, '/delete', 'この投稿を削除します。よろしいですか？');
+        });
+    }
+
+    // DEBUG パネル（管理者モードのみ）
+    var debugToggle = document.getElementById('debugToggle');
+    var debugPanel = document.getElementById('debugPanel');
+    if (debugToggle && debugPanel) {
+        debugToggle.addEventListener('click', function () {
+            debugPanel.hidden = !debugPanel.hidden;
+        });
+    }
+
+    var DEBUG_MSG = {
+        change_shelter: '避難所の選択画面に戻ります。よろしいですか？',
+        seed: 'テストデータを入れ直します（いまの投稿は置き換わります）。よろしいですか？',
+        clear_posts: 'すべての投稿を削除します。元に戻せません。よろしいですか？',
+        reset: '避難所と設定を初期化します（投稿は残ります）。よろしいですか？'
+    };
+
+    var debugBtns = document.querySelectorAll('.debug-btn');
+    for (var dbi = 0; dbi < debugBtns.length; dbi++) {
+        debugBtns[dbi].addEventListener('click', function () {
+            var action = this.getAttribute('data-debug');
+            if (!window.confirm(DEBUG_MSG[action] || '実行しますか？')) return;
+            this.disabled = true;
+            fetch('/api/debug', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: urlKey(), action: action })
+            }).then(function (res) {
+                if (!res.ok) throw new Error('failed');
+                location.reload();
+            }).catch(function () {
+                showToast('うまくいきませんでした');
+            });
         });
     }
 
@@ -536,6 +574,9 @@
 
                         this.disabled = true;
 
+                        // ポップアップブロック回避：クリックのジェスチャ中に空タブを先に確保
+                        var adminTab = window.open('', '_blank');
+
                         fetch('/api/shelters/' + id + '/select', {
                             method: 'POST',
                             headers: {
@@ -548,11 +589,21 @@
                                 }
                                 return res.json();
                             })
-                            .then(function () {
-                                // ヘッダー・災害適合表示・現在の避難所表示を全部更新
-                                location.reload();
+                            .then(function (data) {
+                                if (data && data.admin_url) {
+                                    // 初回セットアップ：管理者モードを新しいタブで開く
+                                    if (adminTab) {
+                                        adminTab.location = data.admin_url;
+                                    }
+                                    showSetupDone(data.admin_url, adminTab);
+                                } else {
+                                    // 避難所の変更など（既に管理者）：このタブを更新
+                                    if (adminTab) adminTab.close();
+                                    location.reload();
+                                }
                             })
                             .catch(function () {
+                                if (adminTab) adminTab.close();
                                 showToast('避難所を選択できませんでした');
                             });
                     });
@@ -598,5 +649,28 @@
                 }
             }
         );
+    }
+
+    // 初回セットアップ完了時：管理者モードは新しいタブ、この画面はメッセージ表示
+    function showSetupDone(adminUrl, adminTab) {
+        var search = document.querySelector('.shelter-search');
+        if (search) search.hidden = true;
+        var done = document.getElementById('setupDone');
+        if (!done) return;
+        done.hidden = false;
+        // 新しいタブが開けなかったとき用に手動リンクを出す
+        if (!adminTab || adminTab.closed) {
+            var link = document.getElementById('setupDoneLink');
+            var fb = document.getElementById('setupDoneFallback');
+            if (link) link.href = adminUrl;
+            if (fb) fb.hidden = false;
+        }
+    }
+
+    var setupDoneBoard = document.getElementById('setupDoneBoard');
+    if (setupDoneBoard) {
+        setupDoneBoard.addEventListener('click', function () {
+            location.href = '/';
+        });
     }
 })();
