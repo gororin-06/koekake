@@ -119,6 +119,11 @@ header {
     border-radius: 10px;
 }
 
+/* hidden 属性のときは閉じる（display:grid の上書きを打ち消す） */
+.debug-panel[hidden] {
+    display: none;
+}
+
 .debug-btn {
     min-height: 46px;
     border: none;
