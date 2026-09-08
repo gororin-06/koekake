@@ -169,6 +169,7 @@ def index():
         SELECT * FROM posts
         WHERE is_deleted = 0 AND parent_id IS NULL
         ORDER BY is_pinned DESC, id DESC
+        LIMIT 20
     """).fetchall()
 
     # 表示中の親に対する返信をまとめて取る
@@ -272,6 +273,10 @@ def search_shelters():
 
     db = get_db()
 
+    # キーワードが無いときは全件を返さない（数千件の巨大レスポンスを防ぐ）
+    if not q:
+        return jsonify({'shelters': [], 'count': 0})
+
     params = []
 
     if q:
@@ -320,28 +325,7 @@ def search_shelters():
             FROM shelters
             WHERE {where}
             ORDER BY name
-        """
-
-    else:
-        sql = """
-            SELECT
-                id,
-                name,
-                address,
-                prefecture,
-                city,
-                capacity,
-                disaster_flood,
-                disaster_landslide_etc,
-                disaster_stormsurge,
-                disaster_earthquake,
-                disaster_tsunami,
-                disaster_large_scale_fire,
-                disaster_inland_flooding,
-                disaster_volcanicactivity,
-                is_active
-            FROM shelters
-            ORDER BY name
+            LIMIT 50
         """
 
     rows = db.execute(sql, params).fetchall()
