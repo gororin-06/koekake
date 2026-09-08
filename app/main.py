@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import csv
 from flask import Flask, render_template, request, jsonify, g
 
 app = Flask(__name__)
@@ -84,9 +85,75 @@ def init_db():
         with open('schema.sql', encoding='utf-8') as f:
             conn.executescript(f.read())
 
+def import_shelters():
+    csv_path = os.environ.get(
+        'KOEKAKE_SHELTER_CSV',
+        '/app/hinan-list.csv'
+    )
 
-init_db()
+    if not os.path.exists(csv_path):
+        print(f'避難所CSVがありません: {csv_path}')
+        return
 
+    db = get_db()
+
+    # すでにデータがあるなら二重登録しない
+    count = db.execute(
+        "SELECT COUNT(*) AS c FROM shelters"
+    ).fetchone()['c']
+
+    if count > 0:
+        print(f'避難所データは既に {count} 件あります')
+        return
+
+    with open(csv_path, 'r', encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f)
+
+        imported = 0
+
+        for row in reader:
+            db.execute("""
+                INSERT INTO shelters (
+                    id,
+                    name,
+                    address,
+                    prefecture,
+                    city,
+                    disaster_flood,
+                    disaster_landslide_etc,
+                    disaster_stormsurge,
+                    disaster_earthquake,
+                    disaster_tsunami,
+                    disaster_large_scale_fire,
+                    disaster_inland_flooding,
+                    disaster_volcanicactivity,
+                    is_active,
+                    capacity
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                int(row['NO']),
+                row['名称'],
+                row['住所'],
+                row['都道府県名'],
+                row['市区町村名'],
+                int(row['災害種別_洪水'] or 0),
+                int(row['災害種別_崖崩れ、土石流及び地滑り'] or 0),
+                int(row['災害種別_高潮'] or 0),
+                int(row['災害種別_地震'] or 0),
+                int(row['災害種別_津波'] or 0),
+                int(row['災害種別_大規模な火事'] or 0),
+                int(row['災害種別_内水氾濫'] or 0),
+                int(row['災害種別_火山現象'] or 0),
+                int(row['指定避難所との重複'] or 0),
+                int(row['想定収容人数'] or 0),
+            ))
+
+            imported += 1
+
+    db.commit()
+
+    print(f'避難所データを {imported} 件登録しました')
 
 def key_ok(key):
     """管理者キーの照合。空・不一致は False"""
@@ -102,7 +169,6 @@ def index():
         SELECT * FROM posts
         WHERE is_deleted = 0 AND parent_id IS NULL
         ORDER BY is_pinned DESC, id DESC
-        LIMIT 20
     """).fetchall()
 
     # 表示中の親に対する返信をまとめて取る
@@ -132,7 +198,193 @@ def index():
                            since_id=since_id, admin=admin, today=today)
 
 
+init_db()
+
+with app.app_context():
+    import_shelters()
+
+
+@app.route('/sheltercount')
+def sheltercount():
+    db = get_db()
+
+    row = db.execute(
+        "SELECT COUNT(*) AS c FROM shelters"
+    ).fetchone()
+
+    return jsonify({
+        'count': row['c']
+    })
+
+
+# =========================
+# 避難所選択
+# =========================
+
+@app.route('/api/shelters/<int:shelter_id>/select', methods=['POST'])
+def select_shelter(shelter_id):
+    db = get_db()
+
+    row = db.execute(
+        "SELECT id, name FROM shelters WHERE id = ?",
+        (shelter_id,)
+    ).fetchone()
+
+    if row is None:
+        return jsonify({'error': 'not found'}), 404
+
+    # いったん全部解除
+    db.execute(
+        "UPDATE shelters SET is_active = 0"
+    )
+
+    # 選択した避難所だけ有効化
+    db.execute(
+        "UPDATE shelters SET is_active = 1 WHERE id = ?",
+        (shelter_id,)
+    )
+
+    # settingsにも記録
+    db.execute("""
+        INSERT INTO settings (key, value)
+        VALUES ('active_shelter_id', ?)
+        ON CONFLICT(key)
+        DO UPDATE SET value = excluded.value
+    """, (str(shelter_id),))
+
+    db.commit()
+
+    return jsonify({
+        'ok': True,
+        'id': row['id'],
+        'name': row['name']
+    })
+
+
+# =========================
+# 避難所検索
+# =========================
+
+@app.route('/api/shelters', methods=['GET'])
+def search_shelters():
+    q = (request.args.get('q') or '').strip()
+    field = request.args.get('field', 'all')
+
+    db = get_db()
+
+    params = []
+
+    if q:
+        like = '%' + q + '%'
+
+        if field == 'name':
+            where = "name LIKE ?"
+            params = [like]
+
+        elif field == 'address':
+            where = "address LIKE ?"
+            params = [like]
+
+        elif field == 'city':
+            where = "city LIKE ?"
+            params = [like]
+
+        else:
+            where = """
+                (
+                    name LIKE ?
+                    OR address LIKE ?
+                    OR prefecture LIKE ?
+                    OR city LIKE ?
+                )
+            """
+            params = [like, like, like, like]
+
+        sql = f"""
+            SELECT
+                id,
+                name,
+                address,
+                prefecture,
+                city,
+                capacity,
+                disaster_flood,
+                disaster_landslide_etc,
+                disaster_stormsurge,
+                disaster_earthquake,
+                disaster_tsunami,
+                disaster_large_scale_fire,
+                disaster_inland_flooding,
+                disaster_volcanicactivity,
+                is_active
+            FROM shelters
+            WHERE {where}
+            ORDER BY name
+        """
+
+    else:
+        sql = """
+            SELECT
+                id,
+                name,
+                address,
+                prefecture,
+                city,
+                capacity,
+                disaster_flood,
+                disaster_landslide_etc,
+                disaster_stormsurge,
+                disaster_earthquake,
+                disaster_tsunami,
+                disaster_large_scale_fire,
+                disaster_inland_flooding,
+                disaster_volcanicactivity,
+                is_active
+            FROM shelters
+            ORDER BY name
+        """
+
+    rows = db.execute(sql, params).fetchall()
+
+    disaster_labels = [
+        ('disaster_flood', '洪水'),
+        ('disaster_landslide_etc', '崖崩れ・土石流・地滑り'),
+        ('disaster_stormsurge', '高潮'),
+        ('disaster_earthquake', '地震'),
+        ('disaster_tsunami', '津波'),
+        ('disaster_large_scale_fire', '大規模な火事'),
+        ('disaster_inland_flooding', '内水氾濫'),
+        ('disaster_volcanicactivity', '火山現象'),
+    ]
+
+    result = []
+
+    for row in rows:
+        disasters = []
+
+        for column, label in disaster_labels:
+            if row[column]:
+                disasters.append(label)
+
+        result.append({
+            'id': row['id'],
+            'name': row['name'],
+            'address': row['address'] or '',
+            'prefecture': row['prefecture'] or '',
+            'city': row['city'] or '',
+            'capacity': row['capacity'],
+            'disasters': disasters,
+            'is_active': bool(row['is_active'])
+        })
+
+    return jsonify({
+        'shelters': result,
+        'count': len(result)
+    })
+
+    
 @app.route('/api/posts')
+
 def poll_posts():
     """新着の差分検知。since より後の未削除投稿の件数だけ返す。
 

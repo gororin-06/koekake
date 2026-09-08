@@ -646,3 +646,165 @@ header {
     font-weight: 600;
     z-index: 20;
 }
+
+/* ===== 避難所検索 ===== */
+
+.shelter-search {
+    margin: 16px;
+    padding: 18px 16px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+}
+
+.shelter-search h2 {
+    margin: 0;
+    font-size: 21px;
+}
+
+.shelter-search-lead {
+    margin: 4px 0 14px;
+    color: #6e6e73;
+    font-size: 14px;
+}
+
+.shelter-search-box {
+    display: flex;
+    gap: 8px;
+}
+
+.shelter-search-box input {
+    min-width: 0;
+    flex: 1;
+    height: 50px;
+    padding: 10px 14px;
+    border: 1px solid #D1D1D6;
+    border-radius: 10px;
+    background: #F2F2F7;
+    font-family: inherit;
+    font-size: 18px;
+}
+
+.shelter-search-box button {
+    flex: none;
+    width: 78px;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    background: #007AFF;
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.shelter-search-box button:disabled {
+    background: #c7c7cc;
+}
+
+.shelter-search-status {
+    margin-top: 12px;
+    color: #6e6e73;
+    font-size: 14px;
+}
+
+.shelter-results {
+    margin-top: 10px;
+}
+
+.shelter-result {
+    padding: 14px 0;
+    border-top: 1px solid #E5E5EA;
+}
+
+.shelter-result-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.shelter-result-head strong {
+    font-size: 18px;
+    color: #1c1c1e;
+}
+
+.shelter-active {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #E4F0EE;
+    color: #00695C;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.shelter-address {
+    margin-top: 5px;
+    color: #3c3c43;
+    font-size: 15px;
+}
+
+.shelter-capacity {
+    margin-top: 4px;
+    color: #6e6e73;
+    font-size: 14px;
+}
+
+.shelter-disasters {
+    margin-top: 6px;
+    color: #007AFF;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ===== 避難所検索フィルター ===== */
+
+.shelter-search-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+}
+
+.shelter-filter {
+    flex: 1;
+    min-width: 75px;
+    padding: 9px 8px;
+    border: 1px solid #D1D1D6;
+    border-radius: 9px;
+    background: #F2F2F7;
+    color: #3C3C43;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.shelter-filter.on {
+    background: #007AFF;
+    border-color: #007AFF;
+    color: #fff;
+}
+
+.shelter-result {
+    display: block;
+    width: 100%;
+    padding: 16px 0;
+    border: none;
+    border-top: 1px solid #E5E5EA;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.shelter-result:active {
+    background: #F2F2F7;
+}
+
+.shelter-result:disabled {
+    opacity: .5;
+}

@@ -330,7 +330,7 @@
             var text = ta.value.trim();
 
             if (!text) {
-                showToast('こたえを かいてください');
+                showToast('返信を かいてください');
                 return;
             }
 
@@ -360,5 +360,243 @@
                 showToast('送信できませんでした。もう一度おしてください');
             });
         });
+    }
+
+    // ===== 避難所検索 =====
+
+    var shelterInput = document.getElementById('shelterSearchInput');
+    var shelterSearchBtn = document.getElementById('shelterSearchBtn');
+    var shelterResults = document.getElementById('shelterResults');
+    var shelterSearchStatus = document.getElementById('shelterSearchStatus');
+
+    var shelterField = 'all';
+
+    var shelterFilterButtons =
+        document.querySelectorAll('.shelter-filter');
+
+    shelterFilterButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+
+            shelterFilterButtons.forEach(function (btn) {
+                btn.classList.remove('on');
+            });
+
+            button.classList.add('on');
+
+            shelterField = button.getAttribute('data-field');
+
+            if (shelterField === 'all') {
+                shelterInput.placeholder = '避難所名・住所・市区町村';
+            } else if (shelterField === 'name') {
+                shelterInput.placeholder = '避難所名を入力';
+            } else if (shelterField === 'address') {
+                shelterInput.placeholder = '住所を入力';
+            } else if (shelterField === 'city') {
+                shelterInput.placeholder = '市区町村を入力';
+            }
+        });
+    });
+
+
+    function searchShelters() {
+
+        if (!shelterInput || !shelterResults) {
+            console.error('避難所検索HTMLが見つかりません');
+            return;
+        }
+
+        var q = shelterInput.value.trim();
+
+        shelterSearchBtn.disabled = true;
+        shelterSearchStatus.textContent = '検索しています...';
+        shelterResults.innerHTML = '';
+
+        var url =
+            '/api/shelters?q=' +
+            encodeURIComponent(q) +
+            '&field=' +
+            encodeURIComponent(shelterField);
+
+        console.log('避難所検索:', url);
+
+        fetch(url)
+            .then(function (res) {
+
+                console.log('API status:', res.status);
+
+                return res.text().then(function (text) {
+
+                    console.log('API response:', text);
+
+                    if (!res.ok) {
+                        throw new Error(
+                            'APIエラー ' + res.status + '\n' + text
+                        );
+                    }
+
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(
+                            'JSONとして読み込めませんでした\n' + text
+                        );
+                    }
+                });
+            })
+            .then(function (data) {
+
+                shelterSearchBtn.disabled = false;
+
+                console.log('検索結果:', data);
+
+                var shelters = data.shelters || [];
+
+                shelterSearchStatus.textContent =
+                    shelters.length + '件の避難所が見つかりました';
+
+                if (shelters.length === 0) {
+                    shelterResults.innerHTML =
+                        '<div class="empty">' +
+                        '<strong>該当する避難所がありません</strong>' +
+                        '</div>';
+                    return;
+                }
+
+                shelters.forEach(function (s) {
+
+                    var card = document.createElement('button');
+                    card.type = 'button';
+                    card.className = 'shelter-result';
+                    card.setAttribute('data-id', s.id);
+
+
+                    var name = document.createElement('div');
+                    name.className = 'shelter-result-name';
+                    name.textContent = s.name || '名称不明';
+
+                    card.appendChild(name);
+
+
+                    if (s.city || s.address || s.prefecture) {
+
+                        var address = document.createElement('div');
+                        address.className = 'shelter-address';
+
+                        address.textContent =
+                            (s.prefecture || '') +
+                            (s.city || '') +
+                            (s.address || '');
+
+                        card.appendChild(address);
+                    }
+
+
+                    if (s.capacity !== null && s.capacity !== undefined) {
+
+                        var capacity = document.createElement('div');
+                        capacity.className = 'shelter-capacity';
+
+                        capacity.textContent =
+                            '想定収容人数：' +
+                            s.capacity +
+                            '人';
+
+                        card.appendChild(capacity);
+                    }
+
+
+                    if (s.disasters && s.disasters.length > 0) {
+
+                        var disaster = document.createElement('div');
+                        disaster.className = 'shelter-disasters';
+
+                        disaster.textContent =
+                            '対応：' +
+                            s.disasters.join('・');
+
+                        card.appendChild(disaster);
+                    }
+
+
+                    if (s.is_active) {
+
+                        var active = document.createElement('div');
+                        active.className = 'shelter-active';
+
+                        active.textContent = '現在の避難所';
+
+                        card.appendChild(active);
+                    }
+                    card.addEventListener('click', function () {
+                        var id = this.getAttribute('data-id');
+
+                        if (!window.confirm('この避難所を選択しますか？')) {
+                            return;
+                        }
+
+                        this.disabled = true;
+
+                        fetch('/api/shelters/' + id + '/select', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                            .then(function (res) {
+                                if (!res.ok) {
+                                    throw new Error('選択エラー');
+                                }
+                                return res.json();
+                            })
+                            .then(function () {
+                                // ヘッダー・災害適合表示・現在の避難所表示を全部更新
+                                location.reload();
+                            })
+                            .catch(function () {
+                                showToast('避難所を選択できませんでした');
+                            });
+                    });
+
+                    shelterResults.appendChild(card);
+                });
+            })
+            .catch(function (error) {
+
+                console.error('避難所検索エラー:', error);
+
+                shelterSearchBtn.disabled = false;
+
+                shelterSearchStatus.textContent =
+                    '検索エラーが発生しました';
+
+                shelterResults.innerHTML =
+                    '<div class="empty">' +
+                    '<strong>避難所を取得できませんでした</strong>' +
+                    '<br>' +
+                    'ブラウザの開発者ツールでエラーを確認してください' +
+                    '</div>';
+            });
+    }
+
+
+    if (shelterSearchBtn) {
+        shelterSearchBtn.addEventListener(
+            'click',
+            searchShelters
+        );
+    }
+
+
+    if (shelterInput) {
+        shelterInput.addEventListener(
+            'keydown',
+            function (e) {
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchShelters();
+                }
+            }
+        );
     }
 })();
