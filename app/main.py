@@ -84,6 +84,14 @@ def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         with open('schema.sql', encoding='utf-8') as f:
             conn.executescript(f.read())
+        # 既存DBにリアクション列が無ければ追加（マイグレーション）
+        for col in ('reaction_helpful', 'reaction_seen'):
+            try:
+                conn.execute(
+                    f'ALTER TABLE posts ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0'
+                )
+            except sqlite3.OperationalError:
+                pass  # 既に存在する
 
 def _cap_to_int(v):
     """想定収容人数の表記ゆれを整数に。'8,889人（敷地面積…）'→8889、空/不明→0"""
@@ -485,6 +493,30 @@ def resolve_post(post_id):
     db.commit()
 
     return jsonify({'ok': True})
+
+@app.route('/api/posts/<int:post_id>/react', methods=['POST'])
+def react_post(post_id):
+    """リアクション（助かった/確認した）の加減算。1端末1回はクライアント側で制御。"""
+    data = request.get_json(silent=True) or {}
+    col = {'helpful': 'reaction_helpful', 'seen': 'reaction_seen'}.get(data.get('type'))
+    if col is None:
+        return jsonify({'error': 'invalid'}), 400
+
+    op = data.get('op', 'add')
+
+    db = get_db()
+    row = db.execute(
+        f'SELECT {col} AS c FROM posts WHERE id = ? AND is_deleted = 0', (post_id,)
+    ).fetchone()
+    if row is None:
+        return jsonify({'error': 'not found'}), 404
+
+    newval = max(0, row['c'] - 1) if op == 'remove' else row['c'] + 1
+    db.execute(f'UPDATE posts SET {col} = ? WHERE id = ?', (newval, post_id))
+    db.commit()
+
+    return jsonify({'ok': True, 'count': newval})
+
 
 @app.route('/api/posts/<int:post_id>/pin', methods=['POST'])
 def pin_post(post_id):

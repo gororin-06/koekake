@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b6258" />
+    <meta name="description" content="避難所内の支援情報や困りごとを共有するローカル掲示板" />
+    <title>避難所みんなの掲示板</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="shelter-mark" aria-hidden="true">避</div>
+        <div class="shelter-title">
+          <span class="eyebrow">現在の避難所</span>
+          <h1>中央小学校 避難所</h1>
+        </div>
+        <button class="info-button" id="open-info" type="button" aria-label="現在の避難所情報を表示">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.1"></path></svg>
+          <span>避難所情報</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="timeline" aria-labelledby="timeline-heading">
+        <div class="timeline-head">
+          <div>
+            <h2 id="timeline-heading">みんなの掲示板</h2>
+            <p><span class="online-dot" aria-hidden="true"></span>避難所内ネットワークに接続中</p>
+          </div>
+          <button class="refresh-button" id="refresh-button" type="button" aria-label="投稿を更新">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5"></path><path d="M18.2 9A7 7 0 0 0 6.4 6.4L4 9m16 6-2.4 2.6A7 7 0 0 1 5.8 15"></path></svg>
+          </button>
+        </div>
+
+        <nav class="category-tabs" aria-label="投稿カテゴリー">
+          <button class="tab active" type="button" data-filter="all">すべて</button>
+          <button class="tab" type="button" data-filter="supply">物資</button>
+          <button class="tab" type="button" data-filter="health">健康</button>
+          <button class="tab" type="button" data-filter="child">子ども</button>
+          <button class="tab" type="button" data-filter="support">支援</button>
+        </nav>
+
+        <div class="pinned-label">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4 6 6-3 1-4 4-1 5-3-3-3-3 5-1 4-4 1-3Z"></path></svg>
+          管理者からのお知らせ
+        </div>
+
+        <article class="post admin-post" data-category="admin">
+          <div class="post-icon admin-icon" aria-hidden="true">管</div>
+          <div class="post-body">
+            <div class="post-meta">
+              <strong>避難所運営本部</strong>
+              <span class="verified" aria-label="管理者">✓</span>
+              <time datetime="2026-09-04T10:30">10:30</time>
+            </div>
+            <span class="tag tag-alert">重要</span>
+            <p class="post-text">本日の食料・飲料水の配布は、<strong>17:00から体育館入口</strong>で行います。世帯ごとに代表者1名でお越しください。</p>
+            <div class="post-place">体育館入口</div>
+          </div>
+        </article>
+
+        <div id="post-list" aria-live="polite">
+          <article class="post" data-category="supply">
+            <div class="post-icon supply-icon" aria-hidden="true">物</div>
+            <div class="post-body">
+              <div class="post-meta"><strong>体育館西側・受付</strong><time datetime="2026-09-04T10:25">10:25</time></div>
+              <div class="post-tags"><span class="tag tag-supply">物資が必要</span><span class="status open">未対応</span></div>
+              <p class="post-text">乳児用のおむつ（Lサイズ）が不足しています。少量でも提供できる方は受付までお願いします。</p>
+              <div class="post-actions"><button type="button" class="help-button">支援できます</button><span>2人が確認</span></div>
+            </div>
+          </article>
+
+          <article class="post" data-category="health">
+            <div class="post-icon health-icon" aria-hidden="true">健</div>
+            <div class="post-body">
+              <div class="post-meta"><strong>健康相談窓口</strong><time datetime="2026-09-04T10:05">10:05</time></div>
+              <div class="post-tags"><span class="tag tag-health">健康・体調</span><span class="status working">対応中</span></div>
+              <p class="post-text">体調について相談を希望されている方がいます。医療担当者が確認中です。</p>
+              <p class="privacy-note">症状などの詳しい情報は管理者にのみ共有されます。</p>
+            </div>
+          </article>
+
+          <article class="post" data-category="support">
+            <div class="post-icon support-icon" aria-hidden="true">支</div>
+            <div class="post-body">
+              <div class="post-meta"><strong>2階・一般教室</strong><time datetime="2026-09-04T09:48">9:48</time></div>
+              <div class="post-tags"><span class="tag tag-support">提供できます</span><span class="status available">受付中</span></div>
+              <p class="post-text">モバイルバッテリーを2台貸し出せます。必要な方はこの投稿からお知らせください。</p>
+              <div class="post-actions"><button type="button" class="help-button secondary">利用を希望</button><span>残り2台</span></div>
+            </div>
+          </article>
+
+          <article class="post" data-category="child">
+            <div class="post-icon child-icon" aria-hidden="true">子</div>
+            <div class="post-body">
+              <div class="post-meta"><strong>家族スペースB</strong><time datetime="2026-09-04T09:32">9:32</time></div>
+              <div class="post-tags"><span class="tag tag-child">子ども・見守り</span><span class="status solved">解決済み</span></div>
+              <p class="post-text">荷物整理の間、子どもの見守りをお願いしていました。ご協力ありがとうございました。</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="empty-state" id="empty-state" hidden>
+          <strong>このカテゴリーの投稿はありません</strong>
+          <span>新しい投稿があると、ここに表示されます。</span>
+        </div>
+      </section>
+
+      <aside class="side-panel" aria-label="避難所の状況">
+        <div class="side-card">
+          <h2>避難所の状況</h2>
+          <dl class="shelter-stats">
+            <div><dt>避難者</dt><dd>128<small>人</small></dd></div>
+            <div><dt>受入状況</dt><dd class="safe-text">受入中</dd></div>
+          </dl>
+          <div class="facility-list">
+            <span><b aria-hidden="true">●</b>給水</span>
+            <span><b aria-hidden="true">●</b>充電</span>
+            <span><b aria-hidden="true">●</b>救護</span>
+            <span class="off"><b aria-hidden="true">●</b>入浴</span>
+          </div>
+          <button class="side-info-button" id="open-info-side" type="button">避難所情報を確認</button>
+          <a class="admin-entry" href="admin.html">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6l-7-3Z"></path><path d="M9 12l2 2 4-4"></path></svg>
+            管理者ページ
+          </a>
+        </div>
+        <p class="demo-note">これは操作を確認するためのデモ画面です。表示されている避難所・投稿はサンプルです。</p>
+      </aside>
+    </main>
+
+    <button class="compose-button" id="open-compose" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      <span>投稿する</span>
+    </button>
+
+    <dialog class="modal" id="info-dialog">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div><span class="modal-kicker">現在地</span><h2>中央小学校 避難所</h2></div>
+          <button class="close-button" type="button" data-close="info-dialog" aria-label="閉じる">×</button>
+        </div>
+        <div class="address-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <div><span>住所（サンプル）</span><strong>千葉県○○市中央1丁目1-1</strong></div>
+        </div>
+        <dl class="info-list">
+          <div><dt>開設日時</dt><dd>9月4日 07:30</dd></div>
+          <div><dt>管理者窓口</dt><dd>体育館入口・運営本部</dd></div>
+          <div><dt>利用できる設備</dt><dd>給水・充電・救護スペース</dd></div>
+          <div><dt>避難者数</dt><dd>128人</dd></div>
+        </dl>
+        <button class="primary-wide" type="button" data-close="info-dialog">掲示板に戻る</button>
+        <a class="admin-entry modal-admin-entry" href="admin.html">管理者としてログイン</a>
+      </div>
+    </dialog>
+
+    <dialog class="modal" id="compose-dialog">
+      <form class="modal-card compose-card" id="compose-form">
+        <div class="modal-head">
+          <div><span class="modal-kicker">新しい投稿</span><h2>情報を共有する</h2></div>
+          <button class="close-button" type="button" data-close="compose-dialog" aria-label="閉じる">×</button>
+        </div>
+        <label class="field-label" for="category">カテゴリー</label>
+        <select id="category" required>
+          <option value="supply">物資が必要</option>
+          <option value="support">物資・支援を提供できる</option>
+          <option value="child">子ども・見守り</option>
+          <option value="health">健康・体調</option>
+        </select>
+        <label class="field-label" for="location">場所・表示名</label>
+        <input id="location" maxlength="30" placeholder="例：体育館西側" required />
+        <label class="field-label" for="message">共有したい内容</label>
+        <textarea id="message" rows="5" maxlength="180" placeholder="必要な物や困っていることを入力してください" required></textarea>
+        <p class="form-hint">本名・住所・病名など、個人を特定できる情報は入力しないでください。</p>
+        <button class="primary-wide" type="submit">投稿する</button>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

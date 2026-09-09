@@ -63,13 +63,24 @@ ts[11:16] }}{%- endif -%}
         </button>
     </div>
 
-    <div class="wrap">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="shelter-mark" aria-hidden="true">避</div>
+            <div class="shelter-title">
+                <span class="eyebrow">現在の避難所</span>
+                <h1>{{ status.shelter_name }}</h1>
+            </div>
+        </div>
+    </header>
 
-        <header>
-            <div class="shelter">{{ status.shelter_name }}</div>
-            <div class="appname">こえかけ - 避難者どうしの掲示板</div>
-            <div class="netstat">避難所Wi-Fi 接続中（インターネット不要）</div>
-        </header>
+    <main class="page-shell">
+        <section class="timeline">
+            <div class="timeline-head">
+                <div>
+                    <h2>みんなの掲示板</h2>
+                    <p><span class="online-dot" aria-hidden="true"></span>避難所内ネットワークに接続中（インターネット不要）</p>
+                </div>
+            </div>
 
         {% if admin %}
         <div class="adminmode">管理者モード：ピン留め・削除ができます</div>
@@ -113,25 +124,27 @@ ts[11:16] }}{%- endif -%}
         {% for p in posts %}
         <div class="post {% if p['is_admin'] %}admin{% endif %} {% if p['is_resolved'] %}done{% endif %}"
             data-cat="{{ p['category'] }}">
+            <div class="post-icon" aria-hidden="true">{% if p['is_admin'] %}管{% elif p['category'] == 'sos' %}物{% elif p['category'] == 'health' %}体{% elif p['category'] == 'child' %}子{% else %}お{% endif %}</div>
+            <div class="post-body">
             <div class="meta">
+                {% if p['location'] %}<span class="place">{{ p['location'] }}</span>{% endif %}
+                <span>{{ when(p['post_at'], today) }}</span>
+            </div>
+            <div class="post-tags">
                 {% if p['is_resolved'] %}
                 <span class="badge done">解決済み</span>
                 {% elif p['is_admin'] %}
                 <span class="badge adm">本部からのおしらせ</span>
                 {% else %}
-                <span class="badge {{ p['category'] }}">
-                    {% if p['category'] == 'sos' %}物資SOS
-                    {% elif p['category'] == 'health' %}体調
-                    {% elif p['category'] == 'child' %}子育て
-                    {% else %}おしらせ{% endif %}
-                </span>
+                <span class="badge {{ p['category'] }}">{% if p['category'] == 'sos' %}物資SOS{% elif p['category'] == 'health' %}体調{% elif p['category'] == 'child' %}子育て{% else %}おしらせ{% endif %}</span>
                 {% endif %}
-                <span>
-                    {% if p['location'] %}<span class="place">{{ p['location'] }}</span> ・{% endif %}
-                    {{ when(p['post_at'], today) }}
-                </span>
             </div>
             <div class="body">{{ p['body'] }}</div>
+
+            <div class="reactions">
+                <button type="button" class="react-btn" data-id="{{ p['id'] }}" data-type="helpful">🙏 助かった <span class="react-count">{{ p['reaction_helpful'] }}</span></button>
+                <button type="button" class="react-btn" data-id="{{ p['id'] }}" data-type="seen">✅ 確認した <span class="react-count">{{ p['reaction_seen'] }}</span></button>
+            </div>
 
             {% if admin %}
             <div class="admin-actions">
@@ -169,6 +182,7 @@ ts[11:16] }}{%- endif -%}
                 <button type="button" class="send-reply" data-id="{{ p['id'] }}">送信する</button>
             </div>
             {% endif %}
+            </div>
         </div>
         {% endfor %}
         <div class="empty" id="filterEmpty" hidden>
@@ -187,10 +201,11 @@ ts[11:16] }}{%- endif -%}
             このアプリではなく避難所本部の受付へ直接お声がけください。
         </div>
 
-    </div>
+        </section>
+    </main>
 
     <div class="fab">
-        <button type="button" id="btnOpen">＋ こまりごとを投稿する</button>
+        <button type="button" id="btnOpen"><span>投稿する</span></button>
     </div>
     <!-- 投稿画面（オーバーレイ） -->
     <div class="sheet" id="sheet">

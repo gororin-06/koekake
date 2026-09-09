@@ -207,6 +207,59 @@
         });
     }
 
+    // リアクション（助かった／確認した）。1端末1回、localStorageでトグル。その場で数だけ更新
+    function loadReactions() {
+        try {
+            var raw = localStorage.getItem('koekake_reactions');
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            return window._tmpReactions || {};
+        }
+    }
+    function saveReactions(obj) {
+        try {
+            localStorage.setItem('koekake_reactions', JSON.stringify(obj));
+        } catch (e) {
+            window._tmpReactions = obj;
+        }
+    }
+
+    var reactBtns = document.querySelectorAll('.react-btn');
+    var myReactions = loadReactions();
+    for (var ri = 0; ri < reactBtns.length; ri++) {
+        var rb = reactBtns[ri];
+        if (myReactions[rb.getAttribute('data-id') + ':' + rb.getAttribute('data-type')]) {
+            rb.classList.add('on');
+        }
+        rb.addEventListener('click', function () {
+            var id = this.getAttribute('data-id');
+            var type = this.getAttribute('data-type');
+            var key = id + ':' + type;
+            var op = this.classList.contains('on') ? 'remove' : 'add';
+            var btn = this;
+            var countEl = btn.querySelector('.react-count');
+            btn.disabled = true;
+            fetch('/api/posts/' + id + '/react', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: type, op: op })
+            }).then(function (res) {
+                if (!res.ok) throw new Error('failed');
+                return res.json();
+            }).then(function (data) {
+                btn.disabled = false;
+                if (countEl) countEl.textContent = data.count;
+                var store = loadReactions();
+                if (op === 'add') { btn.classList.add('on'); store[key] = true; }
+                else { btn.classList.remove('on'); delete store[key]; }
+                saveReactions(store);
+            }).catch(function () {
+                btn.disabled = false;
+                showToast('うまくいきませんでした');
+            });
+        });
+    }
+
     // 返信フォームの開閉
     var rbtns = document.querySelectorAll('.reply');
     for (var a = 0; a < rbtns.length; a++) {

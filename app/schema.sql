@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS posts (
     resolved_at  TEXT,
     is_pinned    INTEGER NOT NULL DEFAULT 0,
     is_deleted   INTEGER NOT NULL DEFAULT 0,
+    reaction_helpful INTEGER NOT NULL DEFAULT 0,
+    reaction_seen    INTEGER NOT NULL DEFAULT 0,
     post_at      TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
