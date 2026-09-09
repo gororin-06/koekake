@@ -212,7 +212,7 @@ def index():
     # 解決から30分たった投稿は利用者の一覧から隠す（管理者には常に見せる）
     hide_resolved = "" if admin else (
         " AND NOT (is_resolved = 1 AND resolved_at IS NOT NULL"
-        " AND resolved_at <= datetime('now','localtime','-30 minutes'))"
+        " AND resolved_at <= datetime('now','localtime','-1 minutes'))"
     )
     posts = db.execute(f"""
         SELECT * FROM posts
@@ -232,6 +232,17 @@ def index():
     for r in reply_rows:
         replies.setdefault(r['parent_id'], []).append(r)
 
+    # 各投稿のスレッド内の返信総数（子孫を全部数える）→ プルダウンの「返信N件」に使う
+    def _count_desc(pid):
+        total = 0
+        stack = list(replies.get(pid, []))
+        while stack:
+            node = stack.pop()
+            total += 1
+            stack.extend(replies.get(node['id'], []))
+        return total
+    reply_counts = {p['id']: _count_desc(p['id']) for p in posts}
+
     status = get_shelter_status(db)
 
     # ポーリングの起点。この時点で存在する最大IDより後を「新着」とみなす
@@ -249,7 +260,7 @@ def index():
     return render_template('index.html',
                            posts=posts, replies=replies, status=status,
                            since_id=since_id, admin=admin, today=today,
-                           needs_setup=needs_setup)
+                           needs_setup=needs_setup, reply_counts=reply_counts)
 
 
 init_db()

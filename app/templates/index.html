@@ -234,7 +234,14 @@ ts[11:16] }}{%- endif -%}
                     </div>
                     {% endif %}
 
-                    {{ thread(p['id'], replies, today, 0) }}
+                    {% set rc = reply_counts.get(p['id'], 0) %}
+                    {% if rc > 0 %}
+                    <button type="button" class="reply-toggle" data-id="{{ p['id'] }}" data-count="{{ rc }}">▼ 返信
+                        {{ rc }}件</button>
+                    {% endif %}
+                    <div class="thread" id="thread-{{ p['id'] }}" hidden>
+                        {{ thread(p['id'], replies, today, 0) }}
+                    </div>
 
                     <div class="reply-form" id="rf-{{ p['id'] }}" hidden>
                         <input type="text" class="reply-loc" placeholder="あなたの場所（必須・例: B-12）">

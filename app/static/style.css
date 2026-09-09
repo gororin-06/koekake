@@ -653,6 +653,26 @@ button {
     color: var(--brand);
 }
 
+/* 返信スレッドの開閉（プルダウン） */
+.reply-toggle {
+    margin-top: 10px;
+    padding: 8px 15px;
+    border: 0;
+    border-radius: 999px;
+    background: #e3f0ee;
+    color: var(--brand);
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.reply-toggle:active {
+    background: #d3e8e3;
+}
+
+.thread {
+    margin-top: 4px;
+}
+
 /* ===== 空状態 ===== */
 .empty {
     padding: 48px 24px;

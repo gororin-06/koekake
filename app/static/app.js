@@ -288,6 +288,19 @@
         });
     }
 
+    // 返信スレッドの開閉（既定は非表示）
+    var replyToggles = document.querySelectorAll('.reply-toggle');
+    for (var rtg = 0; rtg < replyToggles.length; rtg++) {
+        replyToggles[rtg].addEventListener('click', function () {
+            var id = this.getAttribute('data-id');
+            var thread = document.getElementById('thread-' + id);
+            if (!thread) return;
+            thread.hidden = !thread.hidden;
+            var n = this.getAttribute('data-count') || '';
+            this.textContent = thread.hidden ? ('▼ 返信 ' + n + '件') : '▲ 返信を非表示';
+        });
+    }
+
     // 返信フォームの開閉
     var rbtns = document.querySelectorAll('.reply');
     for (var a = 0; a < rbtns.length; a++) {
