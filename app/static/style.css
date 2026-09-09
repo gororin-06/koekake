@@ -498,6 +498,54 @@ button {
     background: #f2f5f4;
 }
 
+/* 投稿のインライン編集 */
+.edit-box {
+    margin-top: 12px;
+}
+
+.edit-box textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #b9c8c5;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 16px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.edit-save,
+.edit-cancel {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 9px;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.edit-save {
+    border: 0;
+    background: var(--brand);
+    color: #fff;
+}
+
+.edit-save:disabled {
+    background: #9fbcb6;
+}
+
+.edit-cancel {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--muted);
+    font-weight: 700;
+}
+
 /* 管理者操作 */
 .admin-actions {
     margin-top: 12px;

@@ -11,6 +11,9 @@ CATEGORIES = ('sos', 'health', 'child', 'info')
 # 管理者キー。?key=... で照合する簡易認証。LAN内デモ用（本番運用向けではない）
 ADMIN_KEY = os.environ.get('KOEKAKE_ADMIN_KEY', 'honbu')
 
+# 連投防止：同一端末(token)の最短投稿間隔（秒）。管理者は除外
+POST_COOLDOWN_SECONDS = 10
+
 # settings.disaster_type のキー → (sheltersの列, 日本語ラベル)
 DISASTER_TYPES = {
     'flood':      ('disaster_flood', '洪水'),
@@ -459,6 +462,17 @@ def create_post():
     is_admin = 1 if (data.get('is_admin') and key_ok(data.get('key'))) else 0
 
     db = get_db()
+
+    # 連投防止：管理者以外は直近 POST_COOLDOWN_SECONDS 秒以内の投稿を弾く
+    if not is_admin:
+        recent = db.execute(
+            "SELECT COUNT(*) AS c FROM posts WHERE author_token = ? "
+            "AND post_at > datetime('now','localtime', ?)",
+            (token, '-{} seconds'.format(POST_COOLDOWN_SECONDS))
+        ).fetchone()['c']
+        if recent > 0:
+            return jsonify({'error': 'too_fast'}), 429
+
     cur = db.execute("""
         INSERT INTO posts (parent_id, category, body, author_name, location,
                            author_token, is_admin, is_pinned)
@@ -511,6 +525,31 @@ def resolve_post(post_id):
     db.commit()
 
     return jsonify({'ok': True})
+
+@app.route('/api/posts/<int:post_id>/edit', methods=['POST'])
+def edit_post(post_id):
+    """自分の投稿の本文を編集。token一致が必須（自分の投稿だけ）。"""
+    data = request.get_json(silent=True) or {}
+    token = data.get('token')
+    body = (data.get('body') or '').strip()
+
+    if not token or not body:
+        return jsonify({'error': 'invalid'}), 400
+
+    db = get_db()
+    row = db.execute(
+        'SELECT author_token FROM posts WHERE id = ? AND is_deleted = 0', (post_id,)
+    ).fetchone()
+    if row is None:
+        return jsonify({'error': 'not found'}), 404
+    if row['author_token'] != token:
+        return jsonify({'error': 'forbidden'}), 403
+
+    db.execute('UPDATE posts SET body = ? WHERE id = ?', (body[:500], post_id))
+    db.commit()
+
+    return jsonify({'ok': True})
+
 
 @app.route('/api/posts/<int:post_id>/react', methods=['POST'])
 def react_post(post_id):

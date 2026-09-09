@@ -167,15 +167,18 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(function (res) {
+            if (res.status === 429) throw new Error('too_fast');
             if (!res.ok) throw new Error('failed');
             return res.json();
         }).then(function (data) {
             addMyPost(data.id);
             location.reload();
-        }).catch(function () {
+        }).catch(function (err) {
             btnSend.disabled = false;
             btnSend.textContent = '送信する';
-            showToast('送信できませんでした。もう一度おしてください');
+            showToast(err && err.message === 'too_fast'
+                ? '短い間に投稿しすぎです。少し待ってからお願いします'
+                : '送信できませんでした。もう一度おしてください');
         });
     });
 
@@ -396,6 +399,72 @@
         });
     }
 
+    // 自分の投稿の編集（インライン）。自分の投稿だけボタンを表示
+    var editBtns = document.querySelectorAll('.act.edit');
+    for (var edi = 0; edi < editBtns.length; edi++) {
+        var edb = editBtns[edi];
+        if (!isMine(edb.getAttribute('data-id'))) continue;
+        edb.hidden = false;
+        edb.addEventListener('click', function () {
+            var id = this.getAttribute('data-id');
+            var post = this.closest('.post');
+            var bodyEl = post ? post.querySelector('.body') : null;
+            if (!bodyEl || post.querySelector('.edit-box')) return;
+
+            var current = bodyEl.textContent.trim();
+            var box = document.createElement('div');
+            box.className = 'edit-box';
+            var ta = document.createElement('textarea');
+            ta.rows = 3;
+            ta.value = current;
+            var actRow = document.createElement('div');
+            actRow.className = 'edit-actions';
+            var save = document.createElement('button');
+            save.type = 'button';
+            save.className = 'edit-save';
+            save.textContent = '保存';
+            var cancel = document.createElement('button');
+            cancel.type = 'button';
+            cancel.className = 'edit-cancel';
+            cancel.textContent = 'やめる';
+            actRow.appendChild(save);
+            actRow.appendChild(cancel);
+            box.appendChild(ta);
+            box.appendChild(actRow);
+            bodyEl.hidden = true;
+            bodyEl.parentNode.insertBefore(box, bodyEl.nextSibling);
+            ta.focus();
+
+            cancel.addEventListener('click', function () {
+                box.parentNode.removeChild(box);
+                bodyEl.hidden = false;
+            });
+            save.addEventListener('click', function () {
+                var text = ta.value.trim();
+                if (!text) {
+                    showToast('内容を入力してください');
+                    return;
+                }
+                save.disabled = true;
+                fetch('/api/posts/' + id + '/edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: getToken(), body: text })
+                }).then(function (res) {
+                    if (!res.ok) throw new Error('failed');
+                    return res.json();
+                }).then(function () {
+                    bodyEl.textContent = text;
+                    box.parentNode.removeChild(box);
+                    bodyEl.hidden = false;
+                }).catch(function () {
+                    save.disabled = false;
+                    showToast('編集できませんでした');
+                });
+            });
+        });
+    }
+
     // 避難所情報オーバーレイ（左上タップで開く）
     var shelterInfo = document.getElementById('shelterInfo');
     var shelterInfoBtn = document.getElementById('shelterInfoBtn');
@@ -466,15 +535,18 @@
                     token: getToken()
                 })
             }).then(function (res) {
+                if (res.status === 429) throw new Error('too_fast');
                 if (!res.ok) throw new Error('failed');
                 return res.json();
             }).then(function (data) {
                 addMyPost(data.id);
                 location.reload();
-            }).catch(function () {
+            }).catch(function (err) {
                 self.disabled = false;
                 self.textContent = '送信する';
-                showToast('送信できませんでした。もう一度おしてください');
+                showToast(err && err.message === 'too_fast'
+                    ? '短い間に投稿しすぎです。少し待ってからお願いします'
+                    : '送信できませんでした。もう一度おしてください');
             });
         });
     }

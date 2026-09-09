@@ -188,6 +188,7 @@ ts[11:16] }}{%- endif -%}
                 <button type="button" class="act reply" data-id="{{ p['id'] }}">
                     返信する{% if replies.get(p['id']) %} {{ replies[p['id']]|length }}{% endif %}
                 </button>
+                <button type="button" class="act edit" data-id="{{ p['id'] }}" hidden>編集</button>
                 <button type="button" class="act resolve" data-id="{{ p['id'] }}">
                     {% if p['is_resolved'] %}もどす{% else %}✓ 解決した{% endif %}
                 </button>
