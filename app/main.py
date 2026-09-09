@@ -54,10 +54,23 @@ def get_shelter_status(db):
         col, label = DISASTER_TYPES[key]
         is_compatible = bool(shelter[col])
 
+    # 避難所の詳細（左上タップで表示）
+    details = None
+    if shelter is not None:
+        supported = [lbl for k, (col, lbl) in DISASTER_TYPES.items() if shelter[col]]
+        details = {
+            'address': shelter['address'] or '',
+            'city': shelter['city'] or '',
+            'prefecture': shelter['prefecture'] or '',
+            'capacity': shelter['capacity'],
+            'disasters': supported,
+        }
+
     return {
         'shelter_name': shelter_name,
         'disaster_label': label,
         'is_compatible': is_compatible,
+        'details': details,
     }
 
 
@@ -193,9 +206,14 @@ def index():
     db = get_db()
     admin = key_ok(request.args.get('key'))
 
-    posts = db.execute("""
+    # 解決から30分たった投稿は利用者の一覧から隠す（管理者には常に見せる）
+    hide_resolved = "" if admin else (
+        " AND NOT (is_resolved = 1 AND resolved_at IS NOT NULL"
+        " AND resolved_at <= datetime('now','localtime','-30 minutes'))"
+    )
+    posts = db.execute(f"""
         SELECT * FROM posts
-        WHERE is_deleted = 0 AND parent_id IS NULL
+        WHERE is_deleted = 0 AND parent_id IS NULL{hide_resolved}
         ORDER BY is_pinned DESC, id DESC
         LIMIT 20
     """).fetchall()

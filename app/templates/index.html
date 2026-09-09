@@ -65,13 +65,36 @@ ts[11:16] }}{%- endif -%}
 
     <header class="topbar">
         <div class="topbar-inner">
-            <div class="shelter-mark" aria-hidden="true">避</div>
-            <div class="shelter-title">
-                <span class="eyebrow">現在の避難所</span>
-                <h1>{{ status.shelter_name }}</h1>
-            </div>
+            <button type="button" class="shelter-open" id="shelterInfoBtn">
+                <div class="shelter-mark" aria-hidden="true">避</div>
+                <div class="shelter-title">
+                    <span class="eyebrow">現在の避難所　<span class="tap-hint">ⓘ 詳細</span></span>
+                    <h1>{{ status.shelter_name }}</h1>
+                </div>
+            </button>
         </div>
     </header>
+
+    <div class="shelter-info" id="shelterInfo" hidden>
+        <div class="shelter-info-card">
+            <div class="si-head">
+                <div>
+                    <span class="si-kicker">避難所情報</span>
+                    <h2>{{ status.shelter_name }}</h2>
+                </div>
+                <button type="button" class="si-close" id="shelterInfoClose" aria-label="閉じる">×</button>
+            </div>
+            {% if status.details %}
+            <dl class="si-list">
+                <div><dt>住所</dt><dd>{{ status.details.address or '—' }}</dd></div>
+                <div><dt>市区町村</dt><dd>{{ status.details.city or '—' }}</dd></div>
+                <div><dt>想定収容人数</dt><dd>{% if status.details.capacity %}{{ status.details.capacity }}人{% else %}—{% endif %}</dd></div>
+                <div><dt>対応する災害</dt><dd>{% if status.details.disasters %}{{ status.details.disasters|join('・') }}{% else %}情報なし{% endif %}</dd></div>
+            </dl>
+            {% endif %}
+            <button type="button" class="si-back" id="shelterInfoClose2">閉じる</button>
+        </div>
+    </div>
 
     <main class="page-shell">
         <section class="timeline">

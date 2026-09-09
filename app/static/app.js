@@ -396,6 +396,24 @@
         });
     }
 
+    // 避難所情報オーバーレイ（左上タップで開く）
+    var shelterInfo = document.getElementById('shelterInfo');
+    var shelterInfoBtn = document.getElementById('shelterInfoBtn');
+    if (shelterInfo && shelterInfoBtn) {
+        shelterInfoBtn.addEventListener('click', function () {
+            shelterInfo.hidden = false;
+        });
+        var infoClosers = shelterInfo.querySelectorAll('#shelterInfoClose, #shelterInfoClose2');
+        for (var ic = 0; ic < infoClosers.length; ic++) {
+            infoClosers[ic].addEventListener('click', function () {
+                shelterInfo.hidden = true;
+            });
+        }
+        shelterInfo.addEventListener('click', function (e) {
+            if (e.target === shelterInfo) shelterInfo.hidden = true;  // 背景タップで閉じる
+        });
+    }
+
     // カテゴリタブのフィルタ（表示中の投稿を種類でしぼる。サーバー往復なし）
     var tabs = document.querySelectorAll('.tab');
     var timelinePosts = document.querySelectorAll('.post');
