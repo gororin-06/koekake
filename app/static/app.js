@@ -352,6 +352,12 @@
             if (document.visibilityState === 'visible') checkNew();
         });
 
+        // 表示中は数秒ごとに新着を確認 → 誰かが投稿したら「更新」バーが出る。
+        // 画面が見えているときだけ通信し、自動リロードはしない（読んでいる途中を邪魔しない・省電力）
+        setInterval(function () {
+            if (document.visibilityState === 'visible') checkNew();
+        }, 3000);
+
         // 開いた直後に一度（描画とJS初期化の隙間に届いた分を拾う）
         checkNew();
     }
