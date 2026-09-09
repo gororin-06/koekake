@@ -362,7 +362,31 @@
         var el = document.activeElement;
         if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) return;
         location.reload();
-    }, 300000);      //戻す
+    }, 300000);
+
+    // 接続端末数（ハートビート）。30秒ごと＋復帰時に生存報告し、直近の接続数を表示。
+    // 画面が見えている間だけ送る＝離れた端末は90秒で自動的に数から外れる（正確・省電力）
+    var sessionEl = document.getElementById('sessionCount');
+    if (sessionEl) {
+        var sendHeartbeat = function () {
+            fetch('/api/heartbeat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: getToken() })
+            }).then(function (res) {
+                return res.ok ? res.json() : null;
+            }).then(function (data) {
+                if (data && typeof data.sessions === 'number') sessionEl.textContent = data.sessions;
+            }).catch(function () { });
+        };
+        sendHeartbeat();
+        setInterval(function () {
+            if (document.visibilityState === 'visible') sendHeartbeat();
+        }, 30000);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') sendHeartbeat();
+        });
+    }      //戻す
 
     // 300000
 

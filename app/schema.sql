@@ -39,5 +39,11 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT
 );
 
+-- 接続端末（セッション）。ハートビートで last_seen を更新し、直近の数を「接続数」に使う
+CREATE TABLE IF NOT EXISTS sessions (
+    token     TEXT PRIMARY KEY,
+    last_seen TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_posts_timeline ON posts(is_deleted, parent_id, id DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_parent   ON posts(parent_id);

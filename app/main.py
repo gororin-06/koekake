@@ -214,10 +214,11 @@ def index():
         " AND NOT (is_resolved = 1 AND resolved_at IS NOT NULL"
         " AND resolved_at <= datetime('now','localtime','-1 minutes'))"
     )
+    # 並び：ピン留め → 体調（緊急性が高い）→ 新しい順
     posts = db.execute(f"""
         SELECT * FROM posts
         WHERE is_deleted = 0 AND parent_id IS NULL{hide_resolved}
-        ORDER BY is_pinned DESC, id DESC
+        ORDER BY is_pinned DESC, (category = 'health') DESC, id DESC
         LIMIT 20
     """).fetchall()
 
@@ -667,6 +668,30 @@ def debug_action():
         return jsonify({'error': 'invalid action'}), 400
 
     return jsonify({'ok': True})
+
+
+@app.route('/api/heartbeat', methods=['POST'])
+def heartbeat():
+    """接続端末の生存報告。last_seen を更新し、直近5分の接続数を返す。"""
+    data = request.get_json(silent=True) or {}
+    token = data.get('token')
+
+    db = get_db()
+    if token:
+        db.execute(
+            "INSERT INTO sessions (token, last_seen) VALUES (?, datetime('now','localtime')) "
+            "ON CONFLICT(token) DO UPDATE SET last_seen = excluded.last_seen",
+            (token,)
+        )
+        db.commit()
+
+    # 30秒ごとにハートビートが来る前提。90秒(=2回分の猶予)を過ぎたら離脱とみなす
+    active = db.execute(
+        "SELECT COUNT(*) AS c FROM sessions "
+        "WHERE last_seen > datetime('now','localtime','-90 seconds')"
+    ).fetchone()['c']
+
+    return jsonify({'sessions': active})
 
 
 @app.route('/ping')

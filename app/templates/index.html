@@ -11,7 +11,8 @@ ts[11:16] }}{%- endif -%}
     </div>
     <div class="rbody">{{ r['body'] }}</div>
     <div class="reply-tools">
-        <button type="button" class="react-btn small" data-id="{{ r['id'] }}" data-type="helpful">🙏 <span class="react-count">{{ r['reaction_helpful'] }}</span></button>
+        <button type="button" class="react-btn small" data-id="{{ r['id'] }}" data-type="helpful">🙏 <span
+                class="react-count">{{ r['reaction_helpful'] }}</span></button>
         <button type="button" class="act reply small" data-id="{{ r['id'] }}">返信</button>
     </div>
     <div class="reply-form" id="rf-{{ r['id'] }}" hidden>
@@ -136,7 +137,9 @@ ts[11:16] }}{%- endif -%}
                 <div>
                     <h2>みんなの掲示板</h2>
                     <p><span class="online-dot" aria-hidden="true"></span>{{ status.shelter_name
-                        }}の避難所ネットワークに接続中<br>（インターネット不要）</p>
+                        }}の避難所ネットワークに接続中<br>（インターネット不要）
+                        <span class="session-badge">接続端末 <span id="sessionCount">–</span></span>
+                    </p>
                 </div>
             </div>
 
@@ -175,6 +178,7 @@ ts[11:16] }}{%- endif -%}
             {% endif %}
             {% endif %}
 
+            <div class="filter-label">絞り込み　—　見たい種類をタップ</div>
             <div class="tabs">
                 <button type="button" class="tab on" data-filter="all">すべて</button>
                 <button type="button" class="tab" data-filter="sos">物資</button>

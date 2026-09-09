@@ -271,6 +271,25 @@ button {
     box-shadow: 0 0 0 4px #dff2e8;
 }
 
+.session-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #e3f0ee;
+    color: var(--brand);
+    font-weight: 800;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.filter-label {
+    padding: 14px 20px 0;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
 /* ===== カテゴリタブ ===== */
 .tabs,
 .category-tabs {
