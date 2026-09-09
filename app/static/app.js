@@ -17,7 +17,7 @@
     var toast = document.getElementById('toast');
 
     var category = null;
-    var selected = null;
+    var selectedList = [];
 
     // 端末を識別するトークン。認証の代わり
     function getToken() {
@@ -75,7 +75,7 @@
 
     function openSheet() {
         category = null;
-        selected = null;
+        selectedList = [];
         step1.hidden = false;
         step2.hidden = true;
         stepLabel.textContent = 'ステップ 1 / 2';
@@ -110,7 +110,7 @@
             var raw = this.getAttribute('data-cat');
             var isOther = (raw === 'other');
             category = isOther ? 'info' : raw;  // その他は「おしらせ」扱いで保存
-            selected = null;
+            selectedList = [];
 
             presetBox.innerHTML = '';
             var list = isOther ? [] : (PRESETS[category] || []);
@@ -120,11 +120,10 @@
                 b.className = 'preset';
                 b.textContent = list[j];
                 b.addEventListener('click', function () {
-                    var all = presetBox.querySelectorAll('.preset');
-                    for (var k = 0; k < all.length; k++) all[k].classList.remove('on');
-                    this.classList.add('on');
-                    selected = this.textContent;
-                    freeBody.value = '';
+                    this.classList.toggle('on');  // 複数選択（トグル）
+                    var on = presetBox.querySelectorAll('.preset.on');
+                    selectedList = [];
+                    for (var k = 0; k < on.length; k++) selectedList.push(on[k].textContent);
                 });
                 presetBox.appendChild(b);
             }
@@ -144,7 +143,11 @@
 
     // 送信
     if (btnSend) btnSend.addEventListener('click', function () {
-        var body = freeBody.value.trim() || selected;
+        // 選んだ定型文（複数可）＋自由記述をまとめる
+        var free = freeBody.value.trim();
+        var parts = selectedList.slice();
+        if (free) parts.push(free);
+        var body = parts.join('、');
         if (!body) {
             showToast('つたえる内容をえらんでください');
             return;

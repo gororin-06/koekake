@@ -2,6 +2,27 @@
 {%- if ts[0:10] == today -%}{{ ts[11:16] }}{%- else -%}<span class="daymark">{{ ts[5:7] }}/{{ ts[8:10] }}</span> {{
 ts[11:16] }}{%- endif -%}
 {%- endmacro -%}
+{% macro thread(pid, replies, today, depth) -%}
+{% for r in replies.get(pid, []) %}
+<div class="reply-item" data-cat="{{ r['category'] }}" style="margin-left: {{ (depth if depth < 5 else 5) * 16 }}px">
+    <div class="meta">
+        {% if r['location'] %}<span class="place">{{ r['location'] }}</span>{% endif %}
+        <span>{{ when(r['post_at'], today) }}</span>
+    </div>
+    <div class="rbody">{{ r['body'] }}</div>
+    <div class="reply-tools">
+        <button type="button" class="react-btn small" data-id="{{ r['id'] }}" data-type="helpful">🙏 <span class="react-count">{{ r['reaction_helpful'] }}</span></button>
+        <button type="button" class="act reply small" data-id="{{ r['id'] }}">返信</button>
+    </div>
+    <div class="reply-form" id="rf-{{ r['id'] }}" hidden>
+        <input type="text" class="reply-loc" placeholder="あなたの場所（必須・例: B-12）">
+        <textarea rows="2" placeholder="返信を かいてください"></textarea>
+        <button type="button" class="send-reply" data-id="{{ r['id'] }}">送信する</button>
+    </div>
+</div>
+{{ thread(r['id'], replies, today, depth + 1) }}
+{% endfor %}
+{%- endmacro -%}
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -213,15 +234,7 @@ ts[11:16] }}{%- endif -%}
                     </div>
                     {% endif %}
 
-                    {% for r in replies.get(p['id'], []) %}
-                    <div class="reply-item">
-                        <div class="meta">
-                            <span>{{ r['location'] or '' }}</span>
-                            <span>{{ when(r['post_at'], today) }}</span>
-                        </div>
-                        <div>{{ r['body'] }}</div>
-                    </div>
-                    {% endfor %}
+                    {{ thread(p['id'], replies, today, 0) }}
 
                     <div class="reply-form" id="rf-{{ p['id'] }}" hidden>
                         <input type="text" class="reply-loc" placeholder="あなたの場所（必須・例: B-12）">
@@ -270,7 +283,7 @@ ts[11:16] }}{%- endif -%}
         <!-- ステップ2: 定型文 -->
         <div id="step2" hidden>
             <h2>つたえる内容をえらんでください</h2>
-            <p class="lead">タップするだけで投稿できます</p>
+            <p class="lead">あてはまるものをタップ（複数えらべます）</p>
             <div id="presets"></div>
 
             <details class="freewrite">

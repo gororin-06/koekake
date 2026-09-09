@@ -623,6 +623,36 @@ button {
     background: #9fbcb6;
 }
 
+/* スレッド（返信への返信・返信のリアクション） */
+.rbody {
+    margin-top: 6px;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.reply-tools {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.act.small,
+.react-btn.small {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.act.reply.small {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--brand);
+}
+
 /* ===== 空状態 ===== */
 .empty {
     padding: 48px 24px;

@@ -221,18 +221,16 @@ def index():
         LIMIT 20
     """).fetchall()
 
-    # 表示中の親に対する返信をまとめて取る
+    # スレッド表示用：全階層の返信を親IDでまとめる（返信への返信も辿れるように）
     replies = {}
-    if posts:
-        ids = [p['id'] for p in posts]
-        ph = ','.join('?' * len(ids))
-        rows = db.execute(f"""
-            SELECT * FROM posts
-            WHERE is_deleted = 0 AND parent_id IN ({ph})
-            ORDER BY id ASC
-        """, ids).fetchall()
-        for r in rows:
-            replies.setdefault(r['parent_id'], []).append(r)
+    reply_rows = db.execute("""
+        SELECT * FROM posts
+        WHERE is_deleted = 0 AND parent_id IS NOT NULL
+        ORDER BY id ASC
+        LIMIT 500
+    """).fetchall()
+    for r in reply_rows:
+        replies.setdefault(r['parent_id'], []).append(r)
 
     status = get_shelter_status(db)
 
