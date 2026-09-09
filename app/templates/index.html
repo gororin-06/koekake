@@ -82,6 +82,11 @@ ts[11:16] }}{%- endif -%}
                 </div>
             </div>
 
+        <div class="caution">
+            命にかかわる緊急のとき（心肺停止・激しい出血など）は、
+            このアプリではなく避難所本部の受付へ直接お声がけください。
+        </div>
+
         {% if admin %}
         <div class="adminmode">管理者モード：ピン留め・削除ができます</div>
         <div class="debug">
@@ -143,7 +148,6 @@ ts[11:16] }}{%- endif -%}
 
             <div class="reactions">
                 <button type="button" class="react-btn" data-id="{{ p['id'] }}" data-type="helpful">🙏 助かった <span class="react-count">{{ p['reaction_helpful'] }}</span></button>
-                <button type="button" class="react-btn" data-id="{{ p['id'] }}" data-type="seen">✅ 確認した <span class="react-count">{{ p['reaction_seen'] }}</span></button>
             </div>
 
             {% if admin %}
@@ -196,16 +200,11 @@ ts[11:16] }}{%- endif -%}
         </div>
         {% endif %}
 
-        <div class="caution">
-            命にかかわる緊急のとき（心肺停止・激しい出血など）は、
-            このアプリではなく避難所本部の受付へ直接お声がけください。
-        </div>
-
         </section>
     </main>
 
     <div class="fab">
-        <button type="button" id="btnOpen"><span>投稿する</span></button>
+        <button type="button" id="btnOpen"><span>投稿</span></button>
     </div>
     <!-- 投稿画面（オーバーレイ） -->
     <div class="sheet" id="sheet">
@@ -236,7 +235,7 @@ ts[11:16] }}{%- endif -%}
             </details>
 
             <div class="field">
-                <label for="loc">いまいる場所（区画番号）</label>
+                <label for="loc">いまいる場所</label>
                 <input type="text" id="loc" placeholder="例: B-12">
             </div>
 
@@ -246,6 +245,10 @@ ts[11:16] }}{%- endif -%}
                 <span>本部からのおしらせとして投稿する<small>強調表示され、先頭に固定されます</small></span>
             </label>
             {% endif %}
+
+            <div class="caution">
+                命にかかわる緊急のとき（心肺停止・激しい出血など）は、このアプリではなく避難所本部の受付へ直接お声がけください。
+            </div>
 
             <button type="button" class="submit" id="btnSend">送信する</button>
         </div>

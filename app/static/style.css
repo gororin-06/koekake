@@ -198,6 +198,11 @@ button {
     border-bottom: 1px solid var(--line);
 }
 
+/* フィルタ非表示（display:grid の上書きを打ち消す） */
+.post[hidden] {
+    display: none;
+}
+
 .post-icon {
     width: 45px;
     height: 45px;
@@ -1107,15 +1112,6 @@ button {
     .fab {
         right: 16px;
         bottom: 16px;
-    }
-    .fab button span {
-        display: none;
-    }
-    .fab button {
-        min-height: 56px;
-        width: 56px;
-        padding: 0;
-        justify-content: center;
     }
     .newbar {
         top: 78px;

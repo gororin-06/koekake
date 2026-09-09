@@ -311,6 +311,14 @@
         checkNew();
     }
 
+    // 5分ごとに強制更新（入力中・投稿画面を開いている間はスキップ）
+    setInterval(function () {
+        if (sheet && sheet.classList.contains('open')) return;
+        var el = document.activeElement;
+        if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) return;
+        location.reload();
+    }, 300000);
+
     // 管理者操作（?key=... で開いたときだけボタンがDOMに存在する）
     // キーは管理者のURLにあるので、そこから読む（通常ユーザーのDOMには出さない）
     function urlKey() {
