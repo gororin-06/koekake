@@ -214,11 +214,11 @@ def index():
         " AND NOT (is_resolved = 1 AND resolved_at IS NOT NULL"
         " AND resolved_at <= datetime('now','localtime','-1 minutes'))"
     )
-    # 並び：ピン留め → 体調（緊急性が高い）→ 新しい順
+    # 並び：ピン留め → 未解決を先に（解決済みは下へ）→ 体調（緊急性が高い）→ 新しい順
     posts = db.execute(f"""
         SELECT * FROM posts
         WHERE is_deleted = 0 AND parent_id IS NULL{hide_resolved}
-        ORDER BY is_pinned DESC, (category = 'health') DESC, id DESC
+        ORDER BY is_pinned DESC, is_resolved ASC, (category = 'health') DESC, id DESC
         LIMIT 20
     """).fetchall()
 
