@@ -1176,6 +1176,116 @@ button {
     gap: 10px;
 }
 
+/* ===== 初回セットアップ・ウィザード（災害→市町村→避難所） ===== */
+.setup-wizard {
+    position: relative;
+    margin-top: 8px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.su-back {
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border: 0;
+    background: none;
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.setup-step h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.disaster-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.disaster-btn {
+    min-height: 60px;
+    padding: 12px 14px;
+    border: 1px solid var(--line2);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.disaster-btn:active {
+    background: #eef4f2;
+}
+
+.disaster-btn.plain {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.city-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.city-btn {
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.city-btn:active {
+    background: #eef4f2;
+}
+
+.shelter-divider {
+    margin: 18px 0 8px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line2);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.compat-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.compat-badge.ok {
+    color: #0c6559;
+    background: #e3f0ee;
+}
+
+.compat-badge.ng {
+    color: #9a6a00;
+    background: #fdf0d0;
+}
+
+.shelter-result.incompatible {
+    opacity: .7;
+    border-style: dashed;
+}
+
 .shelter-result {
     display: block;
     width: 100%;

@@ -47,24 +47,39 @@ ts[11:16] }}{%- endif -%}
             <div class="netstat">避難所Wi-Fi 接続中（インターネット不要）</div>
         </header>
 
-        <section class="shelter-search">
-            <h2>避難所を探す</h2>
-            <p class="shelter-search-lead">検索する項目をえらんでください</p>
+        <section class="setup-wizard">
+            <button type="button" class="su-back" id="suBack" hidden>← もどる</button>
 
-            <div class="shelter-search-tabs">
-                <button type="button" class="shelter-filter on" data-field="all">すべて</button>
-                <button type="button" class="shelter-filter" data-field="name">避難所名</button>
-                <button type="button" class="shelter-filter" data-field="address">住所</button>
-                <button type="button" class="shelter-filter" data-field="city">市区町村</button>
+            <div class="setup-step" id="suStep1">
+                <h2>1. 災害の種類をえらぶ</h2>
+                <p class="shelter-search-lead">いま起きている（備える）災害をえらんでください</p>
+                <div class="disaster-grid">
+                    <button type="button" class="disaster-btn" data-disaster="flood" data-label="洪水">洪水</button>
+                    <button type="button" class="disaster-btn" data-disaster="landslide" data-label="崖崩れ・土石流・地滑り">崖崩れ・土石流</button>
+                    <button type="button" class="disaster-btn" data-disaster="stormsurge" data-label="高潮">高潮</button>
+                    <button type="button" class="disaster-btn" data-disaster="earthquake" data-label="地震">地震</button>
+                    <button type="button" class="disaster-btn" data-disaster="tsunami" data-label="津波">津波</button>
+                    <button type="button" class="disaster-btn" data-disaster="fire" data-label="大規模な火事">大規模な火事</button>
+                    <button type="button" class="disaster-btn" data-disaster="inland" data-label="内水氾濫">内水氾濫</button>
+                    <button type="button" class="disaster-btn" data-disaster="volcano" data-label="火山現象">火山現象</button>
+                    <button type="button" class="disaster-btn plain" data-disaster="" data-label="">わからない／指定なし</button>
+                </div>
             </div>
 
-            <div class="shelter-search-box">
-                <input type="search" id="shelterSearchInput" placeholder="避難所名・住所・市区町村" autocomplete="off">
-                <button type="button" id="shelterSearchBtn">検索</button>
+            <div class="setup-step" id="suStep2" hidden>
+                <h2>2. 市区町村をえらぶ</h2>
+                <p class="shelter-search-lead">お探しの市区町村名を入力してください</p>
+                <div class="shelter-search-box">
+                    <input type="search" id="citySearch" placeholder="例: 市原市" autocomplete="off">
+                </div>
+                <div id="cityResults" class="city-results"></div>
             </div>
 
-            <div id="shelterSearchStatus" class="shelter-search-status">検索すると避難所が表示されます</div>
-            <div id="shelterResults" class="shelter-results"></div>
+            <div class="setup-step" id="suStep3" hidden>
+                <h2>3. 避難所をえらぶ</h2>
+                <p class="shelter-search-lead" id="su3lead"></p>
+                <div id="shelterResults" class="shelter-results"></div>
+            </div>
         </section>
 
         <div class="setup-done" id="setupDone" hidden>
@@ -112,10 +127,10 @@ ts[11:16] }}{%- endif -%}
                     <dt>住所</dt>
                     <dd>{{ status.details.address or '—' }}</dd>
                 </div>
-                <div>
+                <!-- <div>
                     <dt>市区町村</dt>
                     <dd>{{ status.details.city or '—' }}</dd>
-                </div>
+                </div> -->
                 <div>
                     <dt>想定収容人数</dt>
                     <dd>{% if status.details.capacity %}{{ status.details.capacity }}人{% else %}—{% endif %}</dd>

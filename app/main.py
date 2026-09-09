@@ -333,6 +333,30 @@ def select_shelter(shelter_id):
 
 
 # =========================
+# 市区町村一覧
+# =========================
+
+@app.route('/api/cities', methods=['GET'])
+def list_cities():
+    """避難所データに存在する市区町村の一覧。q で部分一致フィルタ。"""
+    q = (request.args.get('q') or '').strip()
+    db = get_db()
+    if q:
+        rows = db.execute(
+            "SELECT DISTINCT city FROM shelters "
+            "WHERE city IS NOT NULL AND city != '' AND city LIKE ? "
+            "ORDER BY city LIMIT 60",
+            ('%' + q + '%',)
+        ).fetchall()
+    else:
+        rows = db.execute(
+            "SELECT DISTINCT city FROM shelters "
+            "WHERE city IS NOT NULL AND city != '' ORDER BY city LIMIT 60"
+        ).fetchall()
+    return jsonify({'cities': [r['city'] for r in rows]})
+
+
+# =========================
 # 避難所検索
 # =========================
 
@@ -342,6 +366,31 @@ def search_shelters():
     field = request.args.get('field', 'all')
 
     db = get_db()
+
+    # 災害→市町村→施設フロー：city 指定なら、その市町村の避難所を disaster 対応順で返す
+    # （対応しない避難所は除外せず、優先順位を下げて含める）
+    city = request.args.get('city')
+    disaster = request.args.get('disaster')
+    if city:
+        col = DISASTER_TYPES[disaster][0] if disaster in DISASTER_TYPES else None
+        order = (col + " DESC, name") if col else "name"
+        rows = db.execute(
+            f"SELECT * FROM shelters WHERE city = ? ORDER BY {order} LIMIT 50",
+            (city,)
+        ).fetchall()
+        out = []
+        for row in rows:
+            ds = [lbl for k, (c, lbl) in DISASTER_TYPES.items() if row[c]]
+            item = {
+                'id': row['id'], 'name': row['name'],
+                'address': row['address'] or '', 'city': row['city'] or '',
+                'prefecture': row['prefecture'] or '', 'capacity': row['capacity'],
+                'disasters': ds, 'is_active': bool(row['is_active']),
+            }
+            if col:
+                item['is_compatible'] = bool(row[col])
+            out.append(item)
+        return jsonify({'shelters': out, 'count': len(out)})
 
     # キーワードが無いときは全件を返さない（数千件の巨大レスポンスを防ぐ）
     if not q:

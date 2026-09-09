@@ -628,260 +628,188 @@
         });
     }
 
-    // ===== 避難所検索 =====
+    // ===== 初回セットアップ：災害 → 市町村 → 避難所（対応順・非対応は下位） =====
+    var suStep1 = document.getElementById('suStep1');
+    if (suStep1) {
+        var suStep2 = document.getElementById('suStep2');
+        var suStep3 = document.getElementById('suStep3');
+        var citySearch = document.getElementById('citySearch');
+        var cityResults = document.getElementById('cityResults');
+        var suResults = document.getElementById('shelterResults');
+        var su3lead = document.getElementById('su3lead');
+        var suBack = document.getElementById('suBack');
 
-    var shelterInput = document.getElementById('shelterSearchInput');
-    var shelterSearchBtn = document.getElementById('shelterSearchBtn');
-    var shelterResults = document.getElementById('shelterResults');
-    var shelterSearchStatus = document.getElementById('shelterSearchStatus');
+        var selDisaster = '';
+        var selDisasterLabel = '';
+        var selCity = '';
 
-    var shelterField = 'all';
-
-    var shelterFilterButtons =
-        document.querySelectorAll('.shelter-filter');
-
-    shelterFilterButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-
-            shelterFilterButtons.forEach(function (btn) {
-                btn.classList.remove('on');
-            });
-
-            button.classList.add('on');
-
-            shelterField = button.getAttribute('data-field');
-
-            if (shelterField === 'all') {
-                shelterInput.placeholder = '避難所名・住所・市区町村';
-            } else if (shelterField === 'name') {
-                shelterInput.placeholder = '避難所名を入力';
-            } else if (shelterField === 'address') {
-                shelterInput.placeholder = '住所を入力';
-            } else if (shelterField === 'city') {
-                shelterInput.placeholder = '市区町村を入力';
-            }
-        });
-    });
-
-
-    function searchShelters() {
-
-        if (!shelterInput || !shelterResults) {
-            console.error('避難所検索HTMLが見つかりません');
-            return;
+        function suShow(n) {
+            suStep1.hidden = (n !== 1);
+            if (suStep2) suStep2.hidden = (n !== 2);
+            if (suStep3) suStep3.hidden = (n !== 3);
+            if (suBack) suBack.hidden = (n === 1);
         }
 
-        var q = shelterInput.value.trim();
-
-        shelterSearchBtn.disabled = true;
-        shelterSearchStatus.textContent = '検索しています...';
-        shelterResults.innerHTML = '';
-
-        var url =
-            '/api/shelters?q=' +
-            encodeURIComponent(q) +
-            '&field=' +
-            encodeURIComponent(shelterField);
-
-        console.log('避難所検索:', url);
-
-        fetch(url)
-            .then(function (res) {
-
-                console.log('API status:', res.status);
-
-                return res.text().then(function (text) {
-
-                    console.log('API response:', text);
-
-                    if (!res.ok) {
-                        throw new Error(
-                            'APIエラー ' + res.status + '\n' + text
-                        );
-                    }
-
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(
-                            'JSONとして読み込めませんでした\n' + text
-                        );
-                    }
-                });
-            })
-            .then(function (data) {
-
-                shelterSearchBtn.disabled = false;
-
-                console.log('検索結果:', data);
-
-                var shelters = data.shelters || [];
-
-                shelterSearchStatus.textContent =
-                    shelters.length + '件の避難所が見つかりました';
-
-                if (shelters.length === 0) {
-                    shelterResults.innerHTML =
-                        '<div class="empty">' +
-                        '<strong>該当する避難所がありません</strong>' +
-                        '</div>';
-                    return;
+        // 避難所を確定（初回セットアップ端末は管理者モードを新しいタブで開く）
+        function selectShelter(id, btn) {
+            if (!window.confirm('この避難所を選択しますか？')) return;
+            if (btn) btn.disabled = true;
+            var adminTab = window.open('', '_blank');
+            fetch('/api/shelters/' + id + '/select', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(function (res) {
+                if (!res.ok) throw new Error('failed');
+                return res.json();
+            }).then(function (data) {
+                if (data && data.admin_url) {
+                    if (adminTab) adminTab.location = data.admin_url;
+                    showSetupDone(data.admin_url, adminTab);
+                } else {
+                    if (adminTab) adminTab.close();
+                    location.reload();
                 }
-
-                shelters.forEach(function (s) {
-
-                    var card = document.createElement('button');
-                    card.type = 'button';
-                    card.className = 'shelter-result';
-                    card.setAttribute('data-id', s.id);
-
-
-                    var name = document.createElement('div');
-                    name.className = 'shelter-result-name';
-                    name.textContent = s.name || '名称不明';
-
-                    card.appendChild(name);
-
-
-                    if (s.city || s.address || s.prefecture) {
-
-                        var address = document.createElement('div');
-                        address.className = 'shelter-address';
-
-                        address.textContent =
-                            (s.prefecture || '') +
-                            (s.city || '') +
-                            (s.address || '');
-
-                        card.appendChild(address);
-                    }
-
-
-                    if (s.capacity !== null && s.capacity !== undefined) {
-
-                        var capacity = document.createElement('div');
-                        capacity.className = 'shelter-capacity';
-
-                        capacity.textContent =
-                            '想定収容人数：' +
-                            s.capacity +
-                            '人';
-
-                        card.appendChild(capacity);
-                    }
-
-
-                    if (s.disasters && s.disasters.length > 0) {
-
-                        var disaster = document.createElement('div');
-                        disaster.className = 'shelter-disasters';
-
-                        disaster.textContent =
-                            '対応：' +
-                            s.disasters.join('・');
-
-                        card.appendChild(disaster);
-                    }
-
-
-                    if (s.is_active) {
-
-                        var active = document.createElement('div');
-                        active.className = 'shelter-active';
-
-                        active.textContent = '現在の避難所';
-
-                        card.appendChild(active);
-                    }
-                    card.addEventListener('click', function () {
-                        var id = this.getAttribute('data-id');
-
-                        if (!window.confirm('この避難所を選択しますか？')) {
-                            return;
-                        }
-
-                        this.disabled = true;
-
-                        // ポップアップブロック回避：クリックのジェスチャ中に空タブを先に確保
-                        var adminTab = window.open('', '_blank');
-
-                        fetch('/api/shelters/' + id + '/select', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        })
-                            .then(function (res) {
-                                if (!res.ok) {
-                                    throw new Error('選択エラー');
-                                }
-                                return res.json();
-                            })
-                            .then(function (data) {
-                                if (data && data.admin_url) {
-                                    // 初回セットアップ：管理者モードを新しいタブで開く
-                                    if (adminTab) {
-                                        adminTab.location = data.admin_url;
-                                    }
-                                    showSetupDone(data.admin_url, adminTab);
-                                } else {
-                                    // 避難所の変更など（既に管理者）：このタブを更新
-                                    if (adminTab) adminTab.close();
-                                    location.reload();
-                                }
-                            })
-                            .catch(function () {
-                                if (adminTab) adminTab.close();
-                                showToast('避難所を選択できませんでした');
-                            });
-                    });
-
-                    shelterResults.appendChild(card);
-                });
-            })
-            .catch(function (error) {
-
-                console.error('避難所検索エラー:', error);
-
-                shelterSearchBtn.disabled = false;
-
-                shelterSearchStatus.textContent =
-                    '検索エラーが発生しました';
-
-                shelterResults.innerHTML =
-                    '<div class="empty">' +
-                    '<strong>避難所を取得できませんでした</strong>' +
-                    '<br>' +
-                    'ブラウザの開発者ツールでエラーを確認してください' +
-                    '</div>';
+            }).catch(function () {
+                if (adminTab) adminTab.close();
+                if (btn) btn.disabled = false;
+                showToast('避難所を選択できませんでした');
             });
-    }
+        }
 
+        // 手順1：災害種別
+        var disasterBtns = document.querySelectorAll('.disaster-btn');
+        for (var d = 0; d < disasterBtns.length; d++) {
+            disasterBtns[d].addEventListener('click', function () {
+                selDisaster = this.getAttribute('data-disaster') || '';
+                selDisasterLabel = this.getAttribute('data-label') || '';
+                suShow(2);
+                loadCities('');
+                if (citySearch) { citySearch.value = ''; citySearch.focus(); }
+            });
+        }
 
-    if (shelterSearchBtn) {
-        shelterSearchBtn.addEventListener(
-            'click',
-            searchShelters
-        );
-    }
-
-
-    if (shelterInput) {
-        shelterInput.addEventListener(
-            'keydown',
-            function (e) {
-
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    searchShelters();
-                }
+        // 手順2：市区町村
+        function loadCities(q) {
+            fetch('/api/cities?q=' + encodeURIComponent(q))
+                .then(function (res) { return res.ok ? res.json() : { cities: [] }; })
+                .then(function (data) { renderCities(data.cities || []); })
+                .catch(function () { renderCities([]); });
+        }
+        function renderCities(cities) {
+            cityResults.innerHTML = '';
+            if (!cities.length) {
+                cityResults.innerHTML = '<div class="empty"><strong>市区町村が見つかりません</strong></div>';
+                return;
             }
-        );
+            for (var i = 0; i < cities.length; i++) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'city-btn';
+                b.textContent = cities[i];
+                b.addEventListener('click', function () {
+                    selCity = this.textContent;
+                    suShow(3);
+                    loadShelters();
+                });
+                cityResults.appendChild(b);
+            }
+        }
+        if (citySearch) {
+            citySearch.addEventListener('input', function () {
+                loadCities(this.value.trim());
+            });
+        }
+
+        // 手順3：避難所（対応順・非対応は下位に）
+        function loadShelters() {
+            su3lead.textContent = selCity + (selDisasterLabel ? '　（' + selDisasterLabel + 'に対応する避難所を上に表示）' : '');
+            suResults.innerHTML = '<div class="shelter-search-status">読み込み中...</div>';
+            var url = '/api/shelters?city=' + encodeURIComponent(selCity) +
+                '&disaster=' + encodeURIComponent(selDisaster);
+            fetch(url).then(function (res) { return res.ok ? res.json() : { shelters: [] }; })
+                .then(function (data) { renderShelters(data.shelters || []); })
+                .catch(function () {
+                    suResults.innerHTML = '<div class="empty"><strong>取得できませんでした</strong></div>';
+                });
+        }
+        function renderShelters(list) {
+            suResults.innerHTML = '';
+            if (!list.length) {
+                suResults.innerHTML = '<div class="empty"><strong>この市区町村に避難所が見つかりません</strong></div>';
+                return;
+            }
+            var dividerShown = false;
+            for (var i = 0; i < list.length; i++) {
+                var s = list[i];
+                var incompatible = (s.is_compatible === false);
+                if (incompatible && !dividerShown) {
+                    var div = document.createElement('div');
+                    div.className = 'shelter-divider';
+                    div.textContent = 'この災害には指定されていない避難所';
+                    suResults.appendChild(div);
+                    dividerShown = true;
+                }
+                var card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'shelter-result' + (incompatible ? ' incompatible' : '');
+                card.setAttribute('data-id', s.id);
+
+                var name = document.createElement('div');
+                name.className = 'shelter-result-name';
+                name.textContent = s.name || '名称不明';
+                card.appendChild(name);
+
+                if (s.is_compatible === true) {
+                    var okb = document.createElement('span');
+                    okb.className = 'compat-badge ok';
+                    okb.textContent = '✓ ' + (selDisasterLabel || 'この災害') + 'に対応';
+                    card.appendChild(okb);
+                } else if (s.is_compatible === false) {
+                    var ngb = document.createElement('span');
+                    ngb.className = 'compat-badge ng';
+                    ngb.textContent = selDisasterLabel + 'の指定なし';
+                    card.appendChild(ngb);
+                }
+
+                if (s.address) {
+                    var address = document.createElement('div');
+                    address.className = 'shelter-address';
+                    address.textContent = s.address;
+                    card.appendChild(address);
+                }
+                if (s.capacity) {
+                    var cap = document.createElement('div');
+                    cap.className = 'shelter-capacity';
+                    cap.textContent = '想定収容人数：' + s.capacity + '人';
+                    card.appendChild(cap);
+                }
+                if (s.disasters && s.disasters.length > 0) {
+                    var dz = document.createElement('div');
+                    dz.className = 'shelter-disasters';
+                    dz.textContent = '対応：' + s.disasters.join('・');
+                    card.appendChild(dz);
+                }
+                (function (id, btn) {
+                    btn.addEventListener('click', function () { selectShelter(id, btn); });
+                })(s.id, card);
+                suResults.appendChild(card);
+            }
+        }
+
+        // もどる
+        if (suBack) {
+            suBack.addEventListener('click', function () {
+                if (suStep3 && !suStep3.hidden) suShow(2);
+                else if (suStep2 && !suStep2.hidden) suShow(1);
+            });
+        }
+
+        suShow(1);
     }
 
     // 初回セットアップ完了時：管理者モードは新しいタブ、この画面はメッセージ表示
     function showSetupDone(adminUrl, adminTab) {
-        var search = document.querySelector('.shelter-search');
+        var search = document.querySelector('.setup-wizard');
         if (search) search.hidden = true;
         var done = document.getElementById('setupDone');
         if (!done) return;
