@@ -432,7 +432,7 @@
         });
     }
 
-    // DEBUG パネル（管理者モードのみ）
+    // 管理者ツール パネル（管理者モードのみ）
     var debugToggle = document.getElementById('debugToggle');
     var debugPanel = document.getElementById('debugPanel');
     if (debugToggle && debugPanel) {
@@ -445,7 +445,7 @@
         change_shelter: '避難所の選択画面に戻ります。よろしいですか？',
         seed: 'テストデータを入れ直します（いまの投稿は置き換わります）。よろしいですか？',
         clear_posts: 'すべての投稿を削除します。元に戻せません。よろしいですか？',
-        reset: '避難所と設定を初期化します（投稿は残ります）。よろしいですか？'
+        reset: '投稿もふくめて完全に初期化します（避難所・設定・投稿がすべて消えます）。元に戻せません。よろしいですか？'
     };
 
     var debugBtns = document.querySelectorAll('.debug-btn');

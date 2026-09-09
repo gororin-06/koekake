@@ -700,12 +700,16 @@ def debug_action():
         db.commit()
 
     elif action == 'reset':
-        # 避難所と設定をリセット（投稿は残す）→ 初回セットアップ状態へ
+        # 完全初期化：避難所・設定・投稿をすべて消して初回セットアップ状態へ戻す
         db.execute("UPDATE shelters SET is_active = 0")
         db.execute(
             "DELETE FROM settings WHERE key IN "
             "('disaster_type', 'disaster_banner', 'active_shelter_id')"
         )
+        # 投稿も物理削除（自己参照FK対策で返信→親の順に消す）
+        db.execute("DELETE FROM posts WHERE parent_id IS NOT NULL")
+        db.execute("DELETE FROM posts")
+        db.execute("DELETE FROM sqlite_sequence WHERE name = 'posts'")
         db.commit()
 
     elif action == 'clear_posts':
