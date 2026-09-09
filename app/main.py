@@ -374,9 +374,16 @@ def search_shelters():
     if city:
         col = DISASTER_TYPES[disaster][0] if disaster in DISASTER_TYPES else None
         order = (col + " DESC, name") if col else "name"
+        where = "city = ?"
+        params = [city]
+        # 避難所名・住所でのテキスト絞り込み（施設が多い市区町村向け）
+        if q:
+            like = '%' + q + '%'
+            where += " AND (name LIKE ? OR address LIKE ?)"
+            params.extend([like, like])
         rows = db.execute(
-            f"SELECT * FROM shelters WHERE city = ? ORDER BY {order} LIMIT 50",
-            (city,)
+            f"SELECT * FROM shelters WHERE {where} ORDER BY {order} LIMIT 50",
+            params
         ).fetchall()
         out = []
         for row in rows:

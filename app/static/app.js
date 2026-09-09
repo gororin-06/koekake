@@ -636,6 +636,7 @@
         var citySearch = document.getElementById('citySearch');
         var cityResults = document.getElementById('cityResults');
         var suResults = document.getElementById('shelterResults');
+        var shelterSearch = document.getElementById('shelterSearch');
         var su3lead = document.getElementById('su3lead');
         var suBack = document.getElementById('suBack');
 
@@ -708,6 +709,7 @@
                 b.textContent = cities[i];
                 b.addEventListener('click', function () {
                     selCity = this.textContent;
+                    if (shelterSearch) shelterSearch.value = '';
                     suShow(3);
                     loadShelters();
                 });
@@ -724,18 +726,28 @@
         function loadShelters() {
             su3lead.textContent = selCity + (selDisasterLabel ? '　（' + selDisasterLabel + 'に対応する避難所を上に表示）' : '');
             suResults.innerHTML = '<div class="shelter-search-status">読み込み中...</div>';
+            var q = shelterSearch ? shelterSearch.value.trim() : '';
             var url = '/api/shelters?city=' + encodeURIComponent(selCity) +
-                '&disaster=' + encodeURIComponent(selDisaster);
+                '&disaster=' + encodeURIComponent(selDisaster) +
+                '&q=' + encodeURIComponent(q);
             fetch(url).then(function (res) { return res.ok ? res.json() : { shelters: [] }; })
                 .then(function (data) { renderShelters(data.shelters || []); })
                 .catch(function () {
                     suResults.innerHTML = '<div class="empty"><strong>取得できませんでした</strong></div>';
                 });
         }
+        if (shelterSearch) {
+            shelterSearch.addEventListener('input', function () {
+                loadShelters();
+            });
+        }
         function renderShelters(list) {
             suResults.innerHTML = '';
             if (!list.length) {
-                suResults.innerHTML = '<div class="empty"><strong>この市区町村に避難所が見つかりません</strong></div>';
+                var searching = shelterSearch && shelterSearch.value.trim();
+                suResults.innerHTML = searching
+                    ? '<div class="empty"><strong>その名前の避難所が見つかりません</strong>入力を消すと一覧にもどります</div>'
+                    : '<div class="empty"><strong>この市区町村に避難所が見つかりません</strong></div>';
                 return;
             }
             var dividerShown = false;
