@@ -461,6 +461,11 @@ def create_post():
     # 本部からのおしらせは管理者キーが正しいときだけ。本部投稿は先頭に固定する
     is_admin = 1 if (data.get('is_admin') and key_ok(data.get('key'))) else 0
 
+    # 場所は必須（本部投稿は除く）。投稿・リプライとも
+    location = (data.get('location') or '').strip()
+    if not is_admin and not location:
+        return jsonify({'error': 'need_location'}), 400
+
     db = get_db()
 
     # 連投防止：管理者以外は直近 POST_COOLDOWN_SECONDS 秒以内の投稿を弾く
@@ -482,7 +487,7 @@ def create_post():
         category,
         body[:500],
         (data.get('author_name') or '').strip() or None,
-        (data.get('location') or '').strip() or None,
+        location or None,
         token,
         is_admin,
         is_admin,

@@ -86,10 +86,23 @@ ts[11:16] }}{%- endif -%}
             </div>
             {% if status.details %}
             <dl class="si-list">
-                <div><dt>住所</dt><dd>{{ status.details.address or '—' }}</dd></div>
-                <div><dt>市区町村</dt><dd>{{ status.details.city or '—' }}</dd></div>
-                <div><dt>想定収容人数</dt><dd>{% if status.details.capacity %}{{ status.details.capacity }}人{% else %}—{% endif %}</dd></div>
-                <div><dt>対応する災害</dt><dd>{% if status.details.disasters %}{{ status.details.disasters|join('・') }}{% else %}情報なし{% endif %}</dd></div>
+                <div>
+                    <dt>住所</dt>
+                    <dd>{{ status.details.address or '—' }}</dd>
+                </div>
+                <div>
+                    <dt>市区町村</dt>
+                    <dd>{{ status.details.city or '—' }}</dd>
+                </div>
+                <div>
+                    <dt>想定収容人数</dt>
+                    <dd>{% if status.details.capacity %}{{ status.details.capacity }}人{% else %}—{% endif %}</dd>
+                </div>
+                <div>
+                    <dt>対応する災害</dt>
+                    <dd>{% if status.details.disasters %}{{ status.details.disasters|join('・') }}{% else %}情報なし{% endif
+                        %}</dd>
+                </div>
             </dl>
             {% endif %}
             <button type="button" class="si-back" id="shelterInfoClose2">閉じる</button>
@@ -101,128 +114,134 @@ ts[11:16] }}{%- endif -%}
             <div class="timeline-head">
                 <div>
                     <h2>みんなの掲示板</h2>
-                    <p><span class="online-dot" aria-hidden="true"></span>避難所内ネットワークに接続中（インターネット不要）</p>
+                    <p><span class="online-dot" aria-hidden="true"></span>{{ status.shelter_name
+                        }}の避難所ネットワークに接続中<br>（インターネット不要）</p>
                 </div>
             </div>
 
-        <div class="caution">
-            命にかかわる緊急のとき（心肺停止・激しい出血など）は、
-            このアプリではなく避難所本部の受付へ直接お声がけください。
-        </div>
-
-        {% if admin %}
-        <div class="adminmode">管理者モード：ピン留め・削除ができます</div>
-        <div class="debug">
-            <button type="button" id="debugToggle" class="debug-toggle">DEBUG</button>
-            <div class="debug-panel" id="debugPanel" hidden>
-                <button type="button" class="debug-btn" data-debug="change_shelter">避難所を変更</button>
-                <button type="button" class="debug-btn" data-debug="seed">テストデータを挿入</button>
-                <button type="button" class="debug-btn warn" data-debug="clear_posts">投稿を全削除</button>
-                <button type="button" class="debug-btn warn" data-debug="reset">初期化（避難所・設定）</button>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if status.disaster_label %}
-        {% if status.is_compatible %}
-        <div class="disaster-ok">
-            <span class="di-icon">✓</span>
-            <span>この避難所は『{{ status.disaster_label }}』の指定避難場所です</span>
-        </div>
-        {% else %}
-        <div class="disaster-warn">
-            <div class="dw-head">
-                <span class="di-icon">！</span>
-                <span>この避難所は『{{ status.disaster_label }}』の指定を受けていません</span>
-            </div>
-            <div class="dw-sub">係員の案内にしたがい、より安全な場所への移動も検討してください。</div>
-        </div>
-        {% endif %}
-        {% endif %}
-
-        <div class="tabs">
-            <button type="button" class="tab on" data-filter="all">すべて</button>
-            <button type="button" class="tab" data-filter="sos">物資</button>
-            <button type="button" class="tab" data-filter="health">体調</button>
-            <button type="button" class="tab" data-filter="child">子育て</button>
-            <button type="button" class="tab" data-filter="info">おしらせ</button>
-        </div>
-
-        {% if posts %}
-        {% for p in posts %}
-        <div class="post {% if p['is_admin'] %}admin{% endif %} {% if p['is_resolved'] %}done{% endif %}"
-            data-cat="{{ p['category'] }}">
-            <div class="post-icon" aria-hidden="true">{% if p['is_admin'] %}管{% elif p['category'] == 'sos' %}物{% elif p['category'] == 'health' %}体{% elif p['category'] == 'child' %}子{% else %}お{% endif %}</div>
-            <div class="post-body">
-            <div class="meta">
-                {% if p['location'] %}<span class="place">{{ p['location'] }}</span>{% endif %}
-                <span>{{ when(p['post_at'], today) }}</span>
-            </div>
-            <div class="post-tags">
-                {% if p['is_resolved'] %}
-                <span class="badge done">解決済み</span>
-                {% elif p['is_admin'] %}
-                <span class="badge adm">本部からのおしらせ</span>
-                {% else %}
-                <span class="badge {{ p['category'] }}">{% if p['category'] == 'sos' %}物資SOS{% elif p['category'] == 'health' %}体調{% elif p['category'] == 'child' %}子育て{% else %}おしらせ{% endif %}</span>
-                {% endif %}
-            </div>
-            <div class="body">{{ p['body'] }}</div>
-
-            <div class="reactions">
-                <button type="button" class="react-btn" data-id="{{ p['id'] }}" data-type="helpful">🙏 助かった <span class="react-count">{{ p['reaction_helpful'] }}</span></button>
+            <div class="caution">
+                命にかかわる緊急のとき（心肺停止・激しい出血など）は、
+                このアプリではなく避難所本部の受付へ直接お声がけください。
             </div>
 
             {% if admin %}
-            <div class="admin-actions">
-                <button type="button" class="adm-btn pin" data-id="{{ p['id'] }}">
-                    {% if p['is_pinned'] %}★ ピン解除{% else %}☆ ピン留め{% endif %}
-                </button>
-                <button type="button" class="adm-btn del" data-id="{{ p['id'] }}">削除</button>
-            </div>
-            {% endif %}
-
-            {% if not p['is_admin'] %}
-            {% if not p['is_admin'] %}
-            <div class="actions">
-                <button type="button" class="act reply" data-id="{{ p['id'] }}">
-                    返信する{% if replies.get(p['id']) %} {{ replies[p['id']]|length }}{% endif %}
-                </button>
-                <button type="button" class="act edit" data-id="{{ p['id'] }}" hidden>編集</button>
-                <button type="button" class="act resolve" data-id="{{ p['id'] }}">
-                    {% if p['is_resolved'] %}もどす{% else %}✓ 解決した{% endif %}
-                </button>
-            </div>
-            {% endif %}
-
-            {% for r in replies.get(p['id'], []) %}
-            <div class="reply-item">
-                <div class="meta">
-                    <span>{{ r['location'] or '' }}</span>
-                    <span>{{ when(r['post_at'], today) }}</span>
+            <div class="adminmode">管理者モード：ピン留め・削除ができます</div>
+            <div class="debug">
+                <button type="button" id="debugToggle" class="debug-toggle">DEBUG</button>
+                <div class="debug-panel" id="debugPanel" hidden>
+                    <button type="button" class="debug-btn" data-debug="change_shelter">避難所を変更</button>
+                    <button type="button" class="debug-btn" data-debug="seed">テストデータを挿入</button>
+                    <button type="button" class="debug-btn warn" data-debug="clear_posts">投稿を全削除</button>
+                    <button type="button" class="debug-btn warn" data-debug="reset">初期化（避難所・設定）</button>
                 </div>
-                <div>{{ r['body'] }}</div>
+            </div>
+            {% endif %}
+
+            {% if status.disaster_label %}
+            {% if status.is_compatible %}
+            <div class="disaster-ok">
+                <span class="di-icon">✓</span>
+                <span>この避難所は『{{ status.disaster_label }}』の指定避難場所です</span>
+            </div>
+            {% else %}
+            <div class="disaster-warn">
+                <div class="dw-head">
+                    <span class="di-icon">！</span>
+                    <span>この避難所は『{{ status.disaster_label }}』の指定を受けていません</span>
+                </div>
+                <div class="dw-sub">係員の案内にしたがい、より安全な場所への移動も検討してください。</div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="tabs">
+                <button type="button" class="tab on" data-filter="all">すべて</button>
+                <button type="button" class="tab" data-filter="sos">物資</button>
+                <button type="button" class="tab" data-filter="health">体調</button>
+                <button type="button" class="tab" data-filter="child">子育て</button>
+                <button type="button" class="tab" data-filter="info">おしらせ</button>
+            </div>
+
+            {% if posts %}
+            {% for p in posts %}
+            <div class="post {% if p['is_admin'] %}admin{% endif %} {% if p['is_resolved'] %}done{% endif %}"
+                data-cat="{{ p['category'] }}">
+                <div class="post-icon" aria-hidden="true">{% if p['is_admin'] %}管{% elif p['category'] == 'sos' %}物{%
+                    elif p['category'] == 'health' %}体{% elif p['category'] == 'child' %}子{% else %}お{% endif %}</div>
+                <div class="post-body">
+                    <div class="meta">
+                        {% if p['location'] %}<span class="place">{{ p['location'] }}</span>{% endif %}
+                        <span>{{ when(p['post_at'], today) }}</span>
+                    </div>
+                    <div class="post-tags">
+                        {% if p['is_resolved'] %}
+                        <span class="badge done">解決済み</span>
+                        {% elif p['is_admin'] %}
+                        <span class="badge adm">本部からのおしらせ</span>
+                        {% else %}
+                        <span class="badge {{ p['category'] }}">{% if p['category'] == 'sos' %}物資SOS{% elif
+                            p['category'] == 'health' %}体調{% elif p['category'] == 'child' %}子育て{% else %}おしらせ{% endif
+                            %}</span>
+                        {% endif %}
+                    </div>
+                    <div class="body">{{ p['body'] }}</div>
+
+                    <div class="reactions">
+                        <button type="button" class="react-btn" data-id="{{ p['id'] }}" data-type="helpful">🙏 助かった
+                            <span class="react-count">{{ p['reaction_helpful'] }}</span></button>
+                    </div>
+
+                    {% if admin %}
+                    <div class="admin-actions">
+                        <button type="button" class="adm-btn pin" data-id="{{ p['id'] }}">
+                            {% if p['is_pinned'] %}★ ピン解除{% else %}☆ ピン留め{% endif %}
+                        </button>
+                        <button type="button" class="adm-btn del" data-id="{{ p['id'] }}">削除</button>
+                    </div>
+                    {% endif %}
+
+                    {% if not p['is_admin'] %}
+                    {% if not p['is_admin'] %}
+                    <div class="actions">
+                        <button type="button" class="act reply" data-id="{{ p['id'] }}">
+                            返信する{% if replies.get(p['id']) %} {{ replies[p['id']]|length }}{% endif %}
+                        </button>
+                        <button type="button" class="act edit" data-id="{{ p['id'] }}" hidden>編集</button>
+                        <button type="button" class="act resolve" data-id="{{ p['id'] }}">
+                            {% if p['is_resolved'] %}もどす{% else %}✓ 解決した{% endif %}
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% for r in replies.get(p['id'], []) %}
+                    <div class="reply-item">
+                        <div class="meta">
+                            <span>{{ r['location'] or '' }}</span>
+                            <span>{{ when(r['post_at'], today) }}</span>
+                        </div>
+                        <div>{{ r['body'] }}</div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="reply-form" id="rf-{{ p['id'] }}" hidden>
+                        <input type="text" class="reply-loc" placeholder="あなたの場所（必須・例: B-12）">
+                        <textarea rows="2" placeholder="返信を かいてください"></textarea>
+                        <button type="button" class="send-reply" data-id="{{ p['id'] }}">送信する</button>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
             {% endfor %}
-
-            <div class="reply-form" id="rf-{{ p['id'] }}" hidden>
-                <textarea rows="2" placeholder="返信を かいてください"></textarea>
-                <button type="button" class="send-reply" data-id="{{ p['id'] }}">送信する</button>
+            <div class="empty" id="filterEmpty" hidden>
+                <strong>この種類の投稿はまだありません</strong>
+                「すべて」やほかのタブも見てみてください
+            </div>
+            {% else %}
+            <div class="empty">
+                <strong>まだ投稿がありません</strong>
+                こまっていること、手つだえることを<br>かいてみてください
             </div>
             {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-        <div class="empty" id="filterEmpty" hidden>
-            <strong>この種類の投稿はまだありません</strong>
-            「すべて」やほかのタブも見てみてください
-        </div>
-        {% else %}
-        <div class="empty">
-            <strong>まだ投稿がありません</strong>
-            こまっていること、手つだえることを<br>かいてみてください
-        </div>
-        {% endif %}
 
         </section>
     </main>
@@ -245,6 +264,7 @@ ts[11:16] }}{%- endif -%}
             <button type="button" class="cat health" data-cat="health">体調がわるい<small>くすり・ケガ・発熱など</small></button>
             <button type="button" class="cat child" data-cat="child">子育てのこと<small>ミルク・おむつ・離乳食など</small></button>
             <button type="button" class="cat info" data-cat="info">おしらせ<small>避難者どうしの共有・ゆずりあい</small></button>
+            <button type="button" class="cat other" data-cat="other">その他<small>自由に書いて投稿できます</small></button>
         </div>
 
         <!-- ステップ2: 定型文 -->
@@ -259,8 +279,13 @@ ts[11:16] }}{%- endif -%}
             </details>
 
             <div class="field">
-                <label for="loc">いまいる場所</label>
+                <label for="loc">いまいる場所（必須）</label>
                 <input type="text" id="loc" placeholder="例: B-12">
+            </div>
+
+            <div class="field">
+                <label for="qty">数量（任意）</label>
+                <input type="text" id="qty" placeholder="例: 3枚 / 2本">
             </div>
 
             {% if admin %}

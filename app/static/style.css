@@ -587,6 +587,16 @@ button {
     margin-top: 12px;
 }
 
+.reply-form .reply-loc {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 11px 12px;
+    border: 1px solid #b9c8c5;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 16px;
+}
+
 .reply-form textarea {
     width: 100%;
     padding: 12px;
@@ -852,6 +862,7 @@ button {
 .cat.health { background: #b25563; }
 .cat.child { background: #6f5db0; }
 .cat.info { background: var(--brand); }
+.cat.other { background: #6b7570; }
 
 .preset {
     display: block;

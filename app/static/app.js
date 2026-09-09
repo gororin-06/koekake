@@ -107,11 +107,13 @@
     var cats = document.querySelectorAll('.cat');
     for (var i = 0; i < cats.length; i++) {
         cats[i].addEventListener('click', function () {
-            category = this.getAttribute('data-cat');
+            var raw = this.getAttribute('data-cat');
+            var isOther = (raw === 'other');
+            category = isOther ? 'info' : raw;  // その他は「おしらせ」扱いで保存
             selected = null;
 
             presetBox.innerHTML = '';
-            var list = PRESETS[category];
+            var list = isOther ? [] : (PRESETS[category] || []);
             for (var j = 0; j < list.length; j++) {
                 var b = document.createElement('button');
                 b.type = 'button';
@@ -130,6 +132,13 @@
             step1.hidden = true;
             step2.hidden = false;
             stepLabel.textContent = 'ステップ 2 / 2';
+
+            // その他：定型文なし → 自由記述を開いてフォーカス
+            if (isOther) {
+                var det = document.querySelector('.freewrite');
+                if (det) det.open = true;
+                if (freeBody) freeBody.focus();
+            }
         });
     }
 
@@ -141,11 +150,25 @@
             return;
         }
 
+        var loc = locInput.value.trim();
+        var asAdmin = document.getElementById('asAdmin');
+        var adminChecked = asAdmin && asAdmin.checked;
+        // 場所は必須（本部として投稿のときは除く）
+        if (!adminChecked && !loc) {
+            showToast('いまいる場所を入力してください');
+            locInput.focus();
+            return;
+        }
+
+        // 数量（任意）を本文に併記
+        var qtyEl = document.getElementById('qty');
+        var qty = qtyEl ? qtyEl.value.trim() : '';
+        if (qty) body = body + '（数量: ' + qty + '）';
+
         // 連打で二重投稿されないよう即ロック
         btnSend.disabled = true;
         btnSend.textContent = '送信中...';
 
-        var loc = locInput.value.trim();
         if (loc) saveLoc(loc);
 
         var payload = {
@@ -156,8 +179,7 @@
         };
 
         // 管理者モードで「本部として投稿」にチェックがあれば、キーごと送る
-        var asAdmin = document.getElementById('asAdmin');
-        if (asAdmin && asAdmin.checked) {
+        if (adminChecked) {
             payload.is_admin = 1;
             payload.key = urlKey();
         }
@@ -269,7 +291,11 @@
         rbtns[a].addEventListener('click', function () {
             var box = document.getElementById('rf-' + this.getAttribute('data-id'));
             box.hidden = !box.hidden;
-            if (!box.hidden) box.querySelector('textarea').focus();
+            if (!box.hidden) {
+                var rl = box.querySelector('.reply-loc');
+                if (rl && !rl.value) rl.value = loadLoc();  // 前回の場所を初期値に
+                box.querySelector('textarea').focus();
+            }
         });
     }
 
@@ -314,13 +340,15 @@
         checkNew();
     }
 
-    // 5分ごとに強制更新（入力中・投稿画面を開いている間はスキップ）
+    // 3分ごとに強制更新（入力中・投稿画面を開いている間はスキップ）
     setInterval(function () {
         if (sheet && sheet.classList.contains('open')) return;
         var el = document.activeElement;
         if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) return;
         location.reload();
-    }, 300000);
+    }, 300000);      //戻す
+
+    // 300000
 
     // 管理者操作（?key=... で開いたときだけボタンがDOMに存在する）
     // キーは管理者のURLにあるので、そこから読む（通常ユーザーのDOMには出さない）
@@ -512,13 +540,22 @@
     for (var b2 = 0; b2 < sbtns.length; b2++) {
         sbtns[b2].addEventListener('click', function () {
             var id = this.getAttribute('data-id');
-            var ta = document.getElementById('rf-' + id).querySelector('textarea');
+            var form = document.getElementById('rf-' + id);
+            var ta = form.querySelector('textarea');
+            var locEl = form.querySelector('.reply-loc');
             var text = ta.value.trim();
+            var rloc = locEl ? locEl.value.trim() : '';
 
             if (!text) {
                 showToast('返信を かいてください');
                 return;
             }
+            if (!rloc) {
+                showToast('あなたの場所を入力してください');
+                if (locEl) locEl.focus();
+                return;
+            }
+            saveLoc(rloc);
 
             this.disabled = true;
             this.textContent = '送信中...';
@@ -531,7 +568,7 @@
                     parent_id: parseInt(id, 10),
                     category: 'info',
                     body: text,
-                    location: loadLoc(),
+                    location: rloc,
                     token: getToken()
                 })
             }).then(function (res) {
