@@ -820,6 +820,110 @@ button {
 .debug-btn:active { opacity: .85; }
 .debug-btn:disabled { opacity: .5; }
 
+/* 2列グリッド内で横いっぱいに広げるボタン */
+.debug-btn.span2 { grid-column: 1 / -1; }
+
+.debug-btn.access {
+    background: #1f5c46;
+    color: #eafff5;
+}
+
+/* ===== 利用者用アクセス（QR・アドレス） ===== */
+.access-panel {
+    margin: 8px 14px 0;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #d7dbe0;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.access-panel h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+}
+
+.access-lead {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: #333;
+    line-height: 1.5;
+}
+
+.access-qr {
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+    background: #ffffff;
+}
+
+.access-qr canvas {
+    width: 220px;
+    height: 220px;
+    image-rendering: pixelated;      /* 拡大してもぼやけない */
+    image-rendering: crisp-edges;
+}
+
+.access-url-label {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+.access-url {
+    margin: 4px auto 10px;
+    padding: 10px 12px;
+    max-width: 100%;
+    word-break: break-all;
+    font-size: 18px;
+    font-weight: 700;
+    background: #f2f4f6;
+    border-radius: 10px;
+}
+
+.access-warn {
+    margin: 6px 0 10px;
+    padding: 10px 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #7a2420;
+    background: #fdecea;
+    border: 1px solid #f3b9b3;
+    border-radius: 10px;
+}
+
+.access-fix {
+    margin: 0 0 12px;
+}
+
+.access-ip-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.access-fix input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    font-size: 18px;              /* iOSズーム暴発防止（18px以上） */
+    border: 1px solid #c7ccd2;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.access-fix .debug-btn {
+    width: 100%;
+}
+
+.access-note {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: #888;
+}
+
 /* ===== 投稿ボタン（FAB） ===== */
 .fab {
     position: fixed;

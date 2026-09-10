@@ -9,6 +9,10 @@ services:
     environment:
       KOEKAKE_DB: /data/koekake.db
       TZ: Asia/Tokyo
+      # 利用者用QRに載せる、この端末(ホストPC)のLAN IP。
+      # コンテナ内からホストのIPは分からないので、起動時にホスト側で検出して渡す。
+      # 未設定なら空（アクセス画面で手入力にフォールバック）。
+      KOEKAKE_HOST_IP: ${KOEKAKE_HOST_IP:-}
 
 volumes:
   koekake_data:

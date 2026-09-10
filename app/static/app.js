@@ -454,7 +454,7 @@
         reset: '投稿もふくめて完全に初期化します（避難所・設定・投稿がすべて消えます）。元に戻せません。よろしいですか？'
     };
 
-    var debugBtns = document.querySelectorAll('.debug-btn');
+    var debugBtns = document.querySelectorAll('.debug-btn[data-debug]');
     for (var dbi = 0; dbi < debugBtns.length; dbi++) {
         debugBtns[dbi].addEventListener('click', function () {
             var action = this.getAttribute('data-debug');
@@ -471,6 +471,97 @@
                 showToast('うまくいきませんでした');
             });
         });
+    }
+
+    // 利用者用アクセス（QR＋アドレス）。管理用の ?key= を含まない、この端末のLANアドレスを提示する。
+    // 確実さの優先順位： (1)管理者が今LAN-IPで開いている＝到達実績あり
+    //   → (2)ホスト側で注入したIP(KOEKAKE_HOST_IP,source=env) → (3)自動検出(弱い) → (4)手入力
+    var showAccessBtn = document.getElementById('showAccessBtn');
+    var accessPanel = document.getElementById('accessPanel');
+    if (showAccessBtn && accessPanel) {
+        var accessClose = document.getElementById('accessClose');
+        var urlEl = document.getElementById('accessUrl');
+        var canvas = document.getElementById('accessQr');
+        var ipInput = document.getElementById('accessIp');
+        var applyBtn = document.getElementById('accessApply');
+        var warnEl = document.getElementById('accessWarn');
+        var accessPort = location.port;  // 管理者が使っているポート＝公開ポート＝スマホも同じ
+
+        function isLanIp(h) {
+            return /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})$/.test(h);
+        }
+        function buildUrl(host) {
+            return location.protocol + '//' + host + (accessPort ? ':' + accessPort : '') + '/';
+        }
+        function renderQr(host) {
+            var url = buildUrl(host);
+            if (urlEl) urlEl.textContent = url;
+            if (canvas && typeof KoekakeQR !== 'undefined') {
+                var ok = KoekakeQR.draw(url, canvas, 6, 4);
+                if (!ok) showToast('QRを作れませんでした。アドレスを直接お伝えください');
+            }
+        }
+        function setWarn(ok) {
+            if (!warnEl) return;
+            warnEl.hidden = ok;
+            if (!ok) {
+                warnEl.textContent = 'この端末のIPアドレスを自動で特定できませんでした。'
+                    + '下の欄に、この避難所Wi-Fiでのこの端末のIP（例: 192.168.137.1）を入力して'
+                    + '「このIPでQRを作り直す」を押してください。';
+            }
+        }
+        // server: /api/access の応答（無ければ null）。確実なホストと ok フラグを決める
+        function chooseHost(server) {
+            // ホスト側で明示注入したIP(env)を最優先。管理者が別NICで開いていても正しい宛先になる
+            if (server && server.source === 'env' && isLanIp(server.host)) {
+                return { host: server.host, ok: true };
+            }
+            // 管理者が今LAN-IPで開いている＝そのアドレスは到達実績あり
+            if (isLanIp(location.hostname)) return { host: location.hostname, ok: true };
+            // 自動検出はDocker内だとコンテナIPになり得るので確実扱いにしない（候補として提示）
+            if (server && isLanIp(server.host)) return { host: server.host, ok: false };
+            if (server && server.candidates) {
+                for (var i = 0; i < server.candidates.length; i++) {
+                    if (isLanIp(server.candidates[i])) return { host: server.candidates[i], ok: false };
+                }
+            }
+            return { host: location.hostname, ok: false };
+        }
+        function apply(pick) {
+            if (ipInput && isLanIp(pick.host)) ipInput.value = pick.host;
+            renderQr(pick.host);
+            setWarn(pick.ok);
+        }
+
+        var accessDrawn = false;
+        showAccessBtn.addEventListener('click', function () {
+            accessPanel.hidden = false;
+            accessPanel.scrollIntoView(false);
+            if (accessDrawn) return;
+            accessDrawn = true;
+            // まず location 基準で即時表示（オフラインでも待たせない）→ サーバ応答で確定
+            apply(chooseHost(null));
+            fetch('/api/access').then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (data) { if (data) apply(chooseHost(data)); })
+                .catch(function () { /* 取得できなくても暫定表示のまま使える */ });
+        });
+
+        if (applyBtn && ipInput) {
+            applyBtn.addEventListener('click', function () {
+                var ip = ipInput.value.trim();
+                if (!isLanIp(ip)) {
+                    showToast('IPアドレスの形を確認してください（例: 192.168.137.1）');
+                    return;
+                }
+                renderQr(ip);
+                setWarn(true);
+            });
+        }
+        if (accessClose) {
+            accessClose.addEventListener('click', function () {
+                accessPanel.hidden = true;
+            });
+        }
     }
 
     // 自分の投稿の編集（インライン）。自分の投稿だけボタンを表示

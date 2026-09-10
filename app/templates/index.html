@@ -171,11 +171,30 @@ ts[11:16] }}{%- endif -%}
             <div class="debug">
                 <button type="button" id="debugToggle" class="debug-toggle">管理者ツール</button>
                 <div class="debug-panel" id="debugPanel" hidden>
+                    <button type="button" class="debug-btn access span2" id="showAccessBtn">📱 利用者用アクセス（QR・アドレス）</button>
                     <button type="button" class="debug-btn" data-debug="change_shelter">避難所を変更</button>
                     <button type="button" class="debug-btn" data-debug="seed">テストデータ挿入</button>
                     <button type="button" class="debug-btn warn" data-debug="reset">初期化</button>
                     <button type="button" class="debug-btn warn" data-debug="clear_posts">全削除</button>
                 </div>
+            </div>
+
+            <div class="access-panel" id="accessPanel" hidden>
+                <h3>利用者はここから入れます</h3>
+                <p class="access-lead">この避難所のWi-Fiにつないだスマホで、下のQRを読み取るか、アドレスを入力してください。</p>
+                <div class="access-qr"><canvas id="accessQr" aria-label="アクセス用QRコード"></canvas></div>
+                <div class="access-url-label">アドレス（手入力する場合）</div>
+                <div class="access-url" id="accessUrl">—</div>
+
+                <p class="access-warn" id="accessWarn" hidden></p>
+                <div class="access-fix">
+                    <label class="access-ip-label" for="accessIp">うまく繋がらない／IPが違うとき（この避難所Wi-Fiでのこの端末のIP）</label>
+                    <input type="text" id="accessIp" inputmode="decimal" autocomplete="off" placeholder="例: 192.168.137.1">
+                    <button type="button" class="debug-btn" id="accessApply">このIPでQRを作り直す</button>
+                </div>
+
+                <p class="access-note">※ このQRとアドレスは避難者向けです。管理用の鍵は含まれません。</p>
+                <button type="button" class="debug-btn" id="accessClose">閉じる</button>
             </div>
             {% endif %}
 
@@ -349,6 +368,10 @@ ts[11:16] }}{%- endif -%}
 
     <div class="toast" id="toast" hidden></div>
 
+    {% if admin %}
+    <!-- QR生成は管理者画面だけで使う（利用者側には読み込ませない） -->
+    <script src="{{ url_for('static', filename='qrcode.js') }}"></script>
+    {% endif %}
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 
 </body>
