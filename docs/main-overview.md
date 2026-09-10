@@ -68,9 +68,7 @@
 
 ## ユーティリティ
 
-- **`ping()` — `GET /ping`** … 「OK」を返す生存確認。
-- **`dbcheck()` — `GET /dbcheck`** … テーブル一覧を返す確認用。
-- **`if __name__ == '__main__'`** … `python main.py` で直接起動したときだけ開発サーバを起動。**本番はここを通らず gunicorn が `main:app` を読み込む**（Dockerfile の CMD）。
+- **`if __name__ == '__main__'`** … 直接起動したときだけ開発サーバを起動。**本番はここを通らず gunicorn が `python.main:app` を読み込む**（Dockerfile の CMD）。ローカル直起動は `app/` で `python -m python.main`。
 
 ---
 

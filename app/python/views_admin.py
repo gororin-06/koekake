@@ -45,7 +45,7 @@ def debug_action():
 
     elif action == 'seed':
         # デモ用テストデータを投入（seed.py を再利用。既存投稿は置き換わる）
-        import seed
+        from . import seed
         seed.main()
 
     else:

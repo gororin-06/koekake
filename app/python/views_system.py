@@ -89,16 +89,3 @@ def heartbeat():
     ).fetchone()['c']
 
     return jsonify({'sessions': active})
-
-
-@bp.route('/ping')
-def ping():
-    return "<h1 style='font-size:80px'>OK</h1>"
-
-
-@bp.route('/dbcheck')
-def dbcheck():
-    rows = get_db().execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    ).fetchall()
-    return str([r['name'] for r in rows])
