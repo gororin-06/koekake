@@ -3,7 +3,7 @@
 ここは Flask のリクエスト文脈を知らず、db 接続を引数で受け取る純粋な処理に寄せる。
 テストや再利用がしやすいように view から切り離してある。
 """
-from config import ADMIN_KEY, DISASTER_TYPES
+from .config import ADMIN_KEY, DISASTER_TYPES
 
 
 def key_ok(key):

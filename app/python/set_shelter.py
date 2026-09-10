@@ -1,8 +1,8 @@
 """開発用: アクティブな避難所を切り替える
 
-  一覧から探す:  python set_shelter.py 八幡東
-  IDで確定する:  python set_shelter.py --id 1550
-  今の設定を見る: python set_shelter.py
+  一覧から探す:  python python/set_shelter.py 八幡東
+  IDで確定する:  python python/set_shelter.py --id 1550
+  今の設定を見る: python python/set_shelter.py
 """
 import os
 import sqlite3
@@ -71,7 +71,7 @@ def search(conn, keyword):
     print(f'{len(rows)} 件みつかりました:')
     for r in rows:
         print(f"  [{r['id']}] {r['name']}  ({r['city']})")
-    print('\nIDを指定してください:  python set_shelter.py --id <ID>')
+    print('\nIDを指定してください:  python python/set_shelter.py --id <ID>')
 
 
 def main():

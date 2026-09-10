@@ -2,8 +2,8 @@
 すべて管理者キーの照合が必須。開発・デモ用。"""
 from flask import Blueprint, request, jsonify
 
-from db import get_db
-from services import key_ok
+from .db import get_db
+from .services import key_ok
 
 bp = Blueprint('admin', __name__)
 

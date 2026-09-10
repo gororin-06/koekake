@@ -1,8 +1,8 @@
 """画面（HTML）を返すルート。いまはトップの掲示板 `/` のみ。"""
 from flask import Blueprint, render_template, request
 
-from db import get_db
-from services import get_shelter_status, key_ok
+from .db import get_db
+from .services import get_shelter_status, key_ok
 
 bp = Blueprint('pages', __name__)
 

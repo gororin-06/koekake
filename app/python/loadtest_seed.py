@@ -7,13 +7,13 @@
   実データに近いタイムラインを作る
 
 使い方:
-  python loadtest_seed.py                 # 100件 追加
-  python loadtest_seed.py 1000            # 1000件 追加（100件ずつ10バッチ）
-  python loadtest_seed.py 1000 --reset    # 先に全削除してから1000件
-  python loadtest_seed.py 500 --replies 0.3   # うち約3割を返信にする
+  python python/loadtest_seed.py                 # 100件 追加
+  python python/loadtest_seed.py 1000            # 1000件 追加（100件ずつ10バッチ）
+  python python/loadtest_seed.py 1000 --reset    # 先に全削除してから1000件
+  python python/loadtest_seed.py 500 --replies 0.3   # うち約3割を返信にする
 
 Docker ワンショット:
-  docker compose run --rm flask python loadtest_seed.py 1000
+  docker compose run --rm flask python python/loadtest_seed.py 1000
 
 DBパスは環境変数 KOEKAKE_DB（既定 /data/koekake.db）。
 """

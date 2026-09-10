@@ -1,8 +1,8 @@
 """避難所まわりのAPI：件数・選択（初回セットアップ）・市区町村一覧・検索。"""
 from flask import Blueprint, request, jsonify
 
-from db import get_db
-from config import ADMIN_KEY, DISASTER_TYPES
+from .db import get_db
+from .config import ADMIN_KEY, DISASTER_TYPES
 
 bp = Blueprint('shelters', __name__)
 

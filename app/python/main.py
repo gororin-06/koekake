@@ -1,4 +1,9 @@
-"""アプリのエントリポイント（gunicorn は main:app を読む）。
+"""アプリのエントリポイント（gunicorn は python.main:app を読む）。
+
+このファイルは app/python/ パッケージ内にある。実行時のcwdは /app のままなので、
+schema.sql / hinan-list.csv などの相対パスは従来どおり app/ 直下を指す。
+ローカルで直接動かすときは app/ で `python -m python.main`（相対importのため）。
+
 
 役割はここに集約：
   1. Flask アプリを生成
@@ -11,15 +16,16 @@
 """
 from flask import Flask
 
-from db import init_db, close_db
-from importer import import_shelters
-from views_pages import bp as pages_bp
-from views_shelters import bp as shelters_bp
-from views_posts import bp as posts_bp
-from views_admin import bp as admin_bp
-from views_system import bp as system_bp
+from .db import init_db, close_db
+from .importer import import_shelters
+from .views_pages import bp as pages_bp
+from .views_shelters import bp as shelters_bp
+from .views_posts import bp as posts_bp
+from .views_admin import bp as admin_bp
+from .views_system import bp as system_bp
 
-app = Flask(__name__)
+# このパッケージ(python/)はappの1階層下なので、templates/static は親(app/)を指す
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
 
 # リクエスト終了ごとにDB接続を閉じる
 app.teardown_appcontext(close_db)

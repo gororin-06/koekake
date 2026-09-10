@@ -29,9 +29,9 @@ docker compose run --rm --service-ports flask
 ```
 `--service-ports` がないとポートが公開されない。
 
-ワンショット実行:
+ワンショット実行（スクリプトは `python/` 配下）:
 ```bash
-docker compose run --rm flask python seed.py
+docker compose run --rm flask python python/seed.py
 ```
 
 ## ディレクトリ
@@ -41,22 +41,45 @@ koekake-app/
 ├─ compose.yaml
 ├─ Dockerfile
 ├─ requirements.txt      # Flask, gunicorn のみ
-└─ app/
-    ├─ main.py
+└─ app/                    # 実行時のcwd（WORKDIR=/app）。データとテンプレはここ直下
     ├─ schema.sql
-    ├─ import_shelters.py   # CSV取り込み
-    ├─ seed.py              # デモ用初期データ
-    ├─ reset_posts.py       # 投稿全削除
-    ├─ set_shelter.py       # アクティブ避難所の切替
-    ├─ set_disaster.py      # 災害種別の設定
-    ├─ hinan-list.csv       # 千葉県 指定緊急避難場所
+    ├─ hinan-list.csv      # 千葉県 指定緊急避難場所
     ├─ templates/index.html
-    └─ static/
-        ├─ style.css
-        └─ app.js
+    ├─ static/
+    │   ├─ style.css
+    │   └─ app.js
+    └─ python/             # Pythonソースは全部このパッケージ配下
+        ├─ __init__.py     # これで python/ が import 可能なパッケージになる
+        ├─ main.py         # gunicorn は python.main:app を読む（エントリポイント）
+        ├─ config.py       # 定数・環境変数
+        ├─ db.py           # SQLite接続とスキーマ初期化
+        ├─ services.py     # ドメインロジック（避難所ステータス・キー照合）
+        ├─ importer.py     # 起動時のCSV取り込み
+        ├─ views_pages.py  # 画面（/）
+        ├─ views_shelters.py   # 避難所API
+        ├─ views_posts.py      # 投稿・返信API
+        ├─ views_admin.py      # 管理者API
+        ├─ views_system.py     # ハートビート・アクセス情報など
+        │   # ↓ 単独実行のワンショットCLI（アプリ本体はimportしない）
+        ├─ import_shelters.py   # CSV取り込み（手動）
+        ├─ seed.py              # デモ用初期データ
+        ├─ reset_posts.py       # 投稿全削除
+        ├─ set_shelter.py       # アクティブ避難所の切替
+        ├─ set_disaster.py      # 災害種別の設定
+        └─ loadtest_seed.py     # 負荷テスト用の大量投入
 ```
 
-`static/` は `templates/` の中ではなく `main.py` と同階層。
+**パッケージ構成のキモ（守ること）**
+- ソースは全部 `app/python/` パッケージ配下。gunicorn は `python.main:app` を読む
+  （Dockerfile の CMD）。WORKDIR は `/app` のまま。
+- アプリ内のimportは相対（`from .db import ...`）。`main.py` の Flask は
+  `template_folder='../templates', static_folder='../static'` で app直下を指す。
+- `templates/static/schema.sql/hinan-list.csv` は `.py` ではないので app直下に据え置き。
+  cwd が `/app` なので `db.py` の `schema.sql`、`import_shelters.py` の `hinan-list.csv`
+  は相対パスのまま解決できる。
+- ワンショットCLIは `KOEKAKE_DB` 環境変数でDBを開く単独実行用。
+  `docker compose run --rm flask python python/seed.py` のように呼ぶ。
+- ローカルで直接起動するときは app/ で `python -m python.main`（相対importのため）。
 
 ## DBスキーマ
 

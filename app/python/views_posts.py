@@ -2,9 +2,9 @@
 ピン留め／削除。ピンと削除は管理者キーが必要。"""
 from flask import Blueprint, request, jsonify
 
-from db import get_db
-from config import CATEGORIES, POST_COOLDOWN_SECONDS
-from services import key_ok
+from .db import get_db
+from .config import CATEGORIES, POST_COOLDOWN_SECONDS
+from .services import key_ok
 
 bp = Blueprint('posts', __name__)
 

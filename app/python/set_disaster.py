@@ -1,10 +1,10 @@
 """今回の災害種別を設定する
 
-  python set_disaster.py tsunami
-  python set_disaster.py          ← 一覧と現在値を表示
+  python python/set_disaster.py tsunami
+  python python/set_disaster.py          ← 一覧と現在値を表示
 
-  python set_disaster.py --hide   ← 適合バナーを画面から隠す
-  python set_disaster.py --show   ← 適合バナーを表示に戻す（既定）
+  python python/set_disaster.py --hide   ← 適合バナーを画面から隠す
+  python python/set_disaster.py --show   ← 適合バナーを表示に戻す（既定）
 
 災害種別の記録は残したまま、バナーの表示だけを管理者が切り替えられる。
 非指定の避難所を意図的に開設していて、避難者を不安にさせたくない場合に使う。

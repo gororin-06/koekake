@@ -7,7 +7,7 @@
 import sqlite3
 from flask import g
 
-from config import DB_PATH
+from .config import DB_PATH
 
 
 def get_db():

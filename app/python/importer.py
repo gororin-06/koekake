@@ -6,7 +6,7 @@ _cap_to_int / _to_flag で正規化してから shelters テーブルへ入れ�
 import os
 import csv
 
-from db import get_db
+from .db import get_db
 
 
 def _cap_to_int(v):
