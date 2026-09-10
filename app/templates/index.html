@@ -297,6 +297,9 @@ ts[11:16] }}{%- endif -%}
                 <strong>この種類の投稿はまだありません</strong>
                 「すべて」やほかのタブも見てみてください
             </div>
+            {% if has_more %}
+            <button type="button" class="load-more" id="loadMore" data-next="{{ show + 20 }}">もっと見る（古い投稿）</button>
+            {% endif %}
             {% else %}
             <div class="empty">
                 <strong>まだ投稿がありません</strong>

@@ -12,6 +12,14 @@ def index():
     db = get_db()
     admin = key_ok(request.args.get('key'))
 
+    # 何件まで表示するか。「もっと見る」で20件ずつ増える（?show=40, 60 ...）。
+    # 上限を設けて、極端な値でも一覧クエリが重くならないようにする
+    try:
+        show = int(request.args.get('show', 20))
+    except (TypeError, ValueError):
+        show = 20
+    show = max(20, min(show, 200))
+
     # 解決から30分たった投稿は利用者の一覧から隠す（管理者には常に見せる）
     hide_resolved = "" if admin else (
         " AND NOT (is_resolved = 1 AND resolved_at IS NOT NULL"
@@ -22,8 +30,15 @@ def index():
         SELECT * FROM posts
         WHERE is_deleted = 0 AND parent_id IS NULL{hide_resolved}
         ORDER BY is_pinned DESC, is_resolved ASC, (category = 'health') DESC, id DESC
-        LIMIT 20
-    """).fetchall()
+        LIMIT ?
+    """, (show,)).fetchall()
+
+    # まだ表示していない親投稿があるか（あれば「もっと見る」を出す）
+    total_parents = db.execute(
+        f"SELECT COUNT(*) AS c FROM posts "
+        f"WHERE is_deleted = 0 AND parent_id IS NULL{hide_resolved}"
+    ).fetchone()['c']
+    has_more = total_parents > len(posts)
 
     # スレッド表示用：全階層の返信を親IDでまとめる（返信への返信も辿れるように）
     replies = {}
@@ -64,4 +79,5 @@ def index():
     return render_template('index.html',
                            posts=posts, replies=replies, status=status,
                            since_id=since_id, admin=admin, today=today,
-                           needs_setup=needs_setup, reply_counts=reply_counts)
+                           needs_setup=needs_setup, reply_counts=reply_counts,
+                           show=show, has_more=has_more)

@@ -692,6 +692,28 @@ button {
     margin-top: 4px;
 }
 
+/* ===== もっと見る ===== */
+.load-more {
+    display: block;
+    width: calc(100% - 28px);
+    margin: 16px 14px 4px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--brand);
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.load-more:active {
+    background: var(--wash);
+}
+
+.load-more:disabled {
+    color: var(--muted);
+}
+
 /* ===== 空状態 ===== */
 .empty {
     padding: 48px 24px;

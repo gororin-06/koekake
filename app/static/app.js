@@ -672,6 +672,32 @@
         });
     }
 
+    // もっと見る：?show= を増やしてサーバーに追加分を描画させる。
+    // 全体を読み直す＝新しい投稿のボタンも通常どおり配線される（部分描画の配線漏れを避ける）。
+    // 読み込み前のスクロール位置を覚えておき、読み込み後に同じ位置へ戻す（上に飛ばさない）。
+    var loadMore = document.getElementById('loadMore');
+    if (loadMore) {
+        loadMore.addEventListener('click', function () {
+            var next = this.getAttribute('data-next');
+            try { sessionStorage.setItem('koekake_scroll', String(window.pageYOffset || 0)); } catch (e) { }
+            this.disabled = true;
+            this.textContent = '読み込み中...';
+            var key = urlKey();
+            var href = location.pathname + '?show=' + encodeURIComponent(next);
+            if (key) href += '&key=' + encodeURIComponent(key);
+            location.assign(href);
+        });
+    }
+
+    // 「もっと見る」直後だけ、元のスクロール位置に戻す（追加分は下に増えるので位置は保てる）
+    try {
+        var savedScroll = sessionStorage.getItem('koekake_scroll');
+        if (savedScroll !== null) {
+            sessionStorage.removeItem('koekake_scroll');
+            window.scrollTo(0, parseInt(savedScroll, 10) || 0);
+        }
+    } catch (e) { }
+
     // 返信の送信
     var sbtns = document.querySelectorAll('.send-reply');
     for (var b2 = 0; b2 < sbtns.length; b2++) {
