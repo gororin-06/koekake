@@ -54,7 +54,7 @@ def main():
                   T2, location='A-03', minutes_ago=18)
     post('info',
          '折り紙とアンパンマンの絵本が2冊あります。'
-         '今からA-03ブロックにお持ちしましょうか。',
+         '今からA-03ブロックにお持ちしましょうか?',
          T3, location='D-08', minutes_ago=12, parent_id=parent)
 
     # 解決済み（グレーアウトの見本）
