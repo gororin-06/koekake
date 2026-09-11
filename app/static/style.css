@@ -23,6 +23,8 @@
     --c-child-bg: #ece7ff;
     --c-info-ink: #146b60;
     --c-info-bg: #d9f0ec;
+    --c-other-ink: #55635f;
+    --c-other-bg: #e7ecea;
 }
 
 * {
@@ -352,6 +354,7 @@ button {
 .post[data-cat="health"] .post-icon { color: var(--c-health-ink); background: var(--c-health-bg); }
 .post[data-cat="child"] .post-icon { color: var(--c-child-ink); background: var(--c-child-bg); }
 .post[data-cat="info"] .post-icon { color: var(--c-info-ink); background: var(--c-info-bg); }
+.post[data-cat="other"] .post-icon { color: var(--c-other-ink); background: var(--c-other-bg); }
 .post.admin .post-icon { color: #fff; background: var(--alert); }
 
 .post-body {
@@ -399,6 +402,7 @@ button {
 .badge.health { color: var(--c-health-ink); background: var(--c-health-bg); }
 .badge.child { color: var(--c-child-ink); background: var(--c-child-bg); }
 .badge.info { color: var(--c-info-ink); background: var(--c-info-bg); }
+.badge.other { color: var(--c-other-ink); background: var(--c-other-bg); }
 .badge.adm { color: #fff; background: var(--alert); }
 .badge.done {
     color: var(--muted);

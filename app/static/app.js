@@ -81,6 +81,11 @@
         stepLabel.textContent = 'ステップ 1 / 2';
         locInput.value = loadLoc();
         freeBody.value = '';
+        // 品目・数量は前回の値を持ち越さない（別の投稿に紛れ込むのを防ぐ）
+        var itemEl = document.getElementById('item');
+        if (itemEl) itemEl.value = '';
+        var qtyEl = document.getElementById('qty');
+        if (qtyEl) qtyEl.value = '';
         sheet.classList.add('open');
     }
 
@@ -109,7 +114,7 @@
         cats[i].addEventListener('click', function () {
             var raw = this.getAttribute('data-cat');
             var isOther = (raw === 'other');
-            category = isOther ? 'info' : raw;  // その他は「おしらせ」扱いで保存
+            category = raw;  // その他は専用カテゴリ 'other' として保存（おしらせと区別）
             selectedList = [];
 
             presetBox.innerHTML = '';
@@ -163,10 +168,15 @@
             return;
         }
 
-        // 数量（任意）を本文に併記
+        // 品目・数量（任意）を本文に併記。両方あれば「品目: 水、数量: 3本」の形にまとめる
+        var itemEl = document.getElementById('item');
+        var item = itemEl ? itemEl.value.trim() : '';
         var qtyEl = document.getElementById('qty');
         var qty = qtyEl ? qtyEl.value.trim() : '';
-        if (qty) body = body + '（数量: ' + qty + '）';
+        var extra = [];
+        if (item) extra.push('品目: ' + item);
+        if (qty) extra.push('数量: ' + qty);
+        if (extra.length) body = body + '（' + extra.join('、') + '）';
 
         // 連打で二重投稿されないよう即ロック
         btnSend.disabled = true;

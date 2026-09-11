@@ -5,7 +5,8 @@ import os
 DB_PATH = os.environ.get('KOEKAKE_DB', '/data/koekake.db')
 
 # 投稿カテゴリ。API側のバリデーションに使う
-CATEGORIES = ('sos', 'health', 'child', 'info')
+# 'other'（その他）は定型文のない自由記述用。おしらせ(info)と区別して表示する
+CATEGORIES = ('sos', 'health', 'child', 'info', 'other')
 
 # 管理者キー。?key=... で照合する簡易認証。LAN内デモ用（本番運用向けではない）
 ADMIN_KEY = os.environ.get('KOEKAKE_ADMIN_KEY', 'honbu')

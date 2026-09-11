@@ -229,7 +229,8 @@ ts[11:16] }}{%- endif -%}
             <div class="post {% if p['is_admin'] %}admin{% endif %} {% if p['is_resolved'] %}done{% endif %}"
                 data-cat="{{ p['category'] }}">
                 <div class="post-icon" aria-hidden="true">{% if p['is_admin'] %}管{% elif p['category'] == 'sos' %}物{%
-                    elif p['category'] == 'health' %}体{% elif p['category'] == 'child' %}子{% else %}お{% endif %}</div>
+                    elif p['category'] == 'health' %}体{% elif p['category'] == 'child' %}子{% elif p['category'] == 'info'
+                    %}お{% else %}他{% endif %}</div>
                 <div class="post-body">
                     <div class="meta">
                         {% if p['location'] %}<span class="place">{{ p['location'] }}</span>{% endif %}
@@ -242,8 +243,8 @@ ts[11:16] }}{%- endif -%}
                         <span class="badge adm">本部からのおしらせ</span>
                         {% else %}
                         <span class="badge {{ p['category'] }}">{% if p['category'] == 'sos' %}物資SOS{% elif
-                            p['category'] == 'health' %}体調{% elif p['category'] == 'child' %}子育て{% else %}おしらせ{% endif
-                            %}</span>
+                            p['category'] == 'health' %}体調{% elif p['category'] == 'child' %}子育て{% elif p['category'] ==
+                            'info' %}おしらせ{% else %}その他{% endif %}</span>
                         {% endif %}
                     </div>
                     <div class="body">{{ p['body'] }}</div>
@@ -345,6 +346,11 @@ ts[11:16] }}{%- endif -%}
             <div class="field">
                 <label for="loc">いまいる場所（必須）</label>
                 <input type="text" id="loc" placeholder="例: B-12">
+            </div>
+
+            <div class="field">
+                <label for="item">品目（任意）</label>
+                <input type="text" id="item" placeholder="例: 水 / おむつ / 毛布">
             </div>
 
             <div class="field">
