@@ -918,6 +918,44 @@ button {
     border-radius: 10px;
 }
 
+.access-howto {
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    text-align: left;
+    background: #f2f6f5;
+    border: 1px solid #d7dbe0;
+    border-radius: 12px;
+}
+
+.access-howto-title {
+    margin: 4px 0 6px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+}
+
+.access-howto-step {
+    margin: 0 0 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.access-cmd {
+    display: block;
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 15px;
+    color: #0b3a34;
+    background: #ffffff;
+    border: 1px solid #c7ccd2;
+    border-radius: 8px;
+    word-break: break-all;
+    -webkit-user-select: all;   /* タップ/クリックで全選択→コピーしやすく */
+    user-select: all;
+}
+
 .access-fix {
     margin: 0 0 12px;
 }
